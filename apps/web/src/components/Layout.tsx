@@ -67,12 +67,9 @@ export function Layout() {
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-60 shrink-0 flex-col bg-stone-900 text-stone-300">
-        <div className="flex items-center gap-2.5 px-4 py-4">
-          <img src="/icone.svg" alt="" className="size-8" />
-          <span className="truncate font-semibold text-white" title={usuario.loja.nome}>
-            {usuario.loja.nome}
-          </span>
+      <aside className="flex w-60 shrink-0 flex-col bg-noite text-stone-300">
+        <div className="px-3 pt-2 pb-1">
+          <img src="/logo-king.jpg" alt={usuario.loja.nome} className="mx-auto w-44" />
         </div>
         <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-2">
           {MENU.map(({ grupo, itens }) => {
@@ -95,7 +92,7 @@ export function Layout() {
                           end={para === '/'}
                           className={({ isActive }) =>
                             `flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                              isActive ? 'bg-marca-600 text-white' : 'hover:bg-stone-800 hover:text-white'
+                              isActive ? 'bg-marca-400 font-medium text-stone-950' : 'hover:bg-stone-800 hover:text-white'
                             }`
                           }
                         >

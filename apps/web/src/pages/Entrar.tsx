@@ -29,7 +29,7 @@ export function Entrar({ nomeLoja }: { nomeLoja?: string }) {
   }
 
   return (
-    <TelaCentral titulo={nomeLoja ?? 'Gestão da Loja'} subtitulo="Entre com seu login e senha.">
+    <TelaCentral titulo={nomeLoja ?? 'Sistema de gestão'} subtitulo="Entre com seu login e senha.">
       <form onSubmit={enviar} className="space-y-4">
         {motivo && <Alerta tipo="info">{motivo}</Alerta>}
         <Campo rotulo="Login" name="login" required autoFocus autoComplete="username" autoCapitalize="none" />
