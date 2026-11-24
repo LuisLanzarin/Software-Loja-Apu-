@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { PrismaErrosFilter } from './common/prisma-erros.filter.ts';
 
 /** Configuração comum ao servidor e aos testes. */
 export function configurarApp(app: INestApplication) {
@@ -16,5 +17,6 @@ export function configurarApp(app: INestApplication) {
   );
   app.use(cookieParser());
   app.setGlobalPrefix('api');
+  app.useGlobalFilters(new PrismaErrosFilter());
   app.enableShutdownHooks();
 }

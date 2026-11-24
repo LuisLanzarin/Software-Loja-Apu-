@@ -39,11 +39,20 @@ npm test           # testes de ponta a ponta da API
 
 Alterou o `schema.prisma`? Rode `npm run db:migrate:dev -w api -- --name descricao`.
 
+## Formação de preço
+
+Markup divisor: `preço = custo ÷ (1 − impostos − despesas fixas − comissão − margem)`.
+A margem desejada vem do produto; se estiver em branco, da categoria; senão, a padrão da loja.
+Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exatamente 15% líquidos.
+
 ## Perfis
 
 | Permissão | Vendedor | Financeiro | Gerente | Admin |
 |---|:-:|:-:|:-:|:-:|
-| Ver preço de custo | | ✅ | ✅ | ✅ |
+| Consultar produtos e preço de venda | ✅ | ✅ | ✅ | ✅ |
+| Ver custo, margem e fornecedores | | ✅ | ✅ | ✅ |
+| Cadastrar produtos, fornecedores, categorias e unidades | | ✅ | ✅ | ✅ |
+| Formação de preço e reajuste em lote | | ✅ | ✅ | ✅ |
 | Autorizar desconto/cancelamento acima do limite | | | ✅ | ✅ |
 | Editar configurações | | | ✅ | ✅ |
 | Ver auditoria | | | ✅ | ✅ |
@@ -54,7 +63,7 @@ A matriz fica em `apps/api/src/common/permissoes.ts`.
 ## Etapas
 
 - [x] 1. Login, usuários, perfis, configurações e auditoria
-- [ ] 2. Produtos, fornecedores e formação de preço
+- [x] 2. Produtos, fornecedores e formação de preço
 - [ ] 3. Entrada de mercadoria e controle de estoque
 - [ ] 4. Vendas, orçamentos e caixa
 - [ ] 5. Relatórios de fechamento, backup automático e instalação como serviço do Windows

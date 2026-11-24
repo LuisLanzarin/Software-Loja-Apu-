@@ -27,6 +27,16 @@ const ACOES: Record<string, string> = {
   'usuario.senha_redefinida': 'Redefiniu senha de usuário',
   'usuario.desbloqueado': 'Desbloqueou usuário',
   'configuracao.alterada': 'Alterou configurações',
+  'precificacao.alterada': 'Alterou parâmetros de formação de preço',
+  'produto.criado': 'Cadastrou produto',
+  'produto.alterado': 'Alterou produto',
+  'preco.reajuste_lote': 'Reajustou preços em lote',
+  'fornecedor.criado': 'Cadastrou fornecedor',
+  'fornecedor.alterado': 'Alterou fornecedor',
+  'categoria.criada': 'Criou categoria',
+  'categoria.alterada': 'Alterou categoria',
+  'unidade.criada': 'Criou unidade',
+  'unidade.alterada': 'Alterou unidade',
 };
 
 export function Auditoria() {

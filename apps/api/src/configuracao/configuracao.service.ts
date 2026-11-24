@@ -3,7 +3,7 @@ import type { Configuracao } from '../generated/prisma/client.ts';
 import { PrismaService } from '../prisma/prisma.service.ts';
 
 export type DadosConfiguracao = Partial<
-  Pick<Configuracao, 'nomeLoja' | 'descontoMaxSemAutorizacao' | 'cancelamentoMaxSemAutorizacao' | 'sessaoInatividadeMin'>
+  Omit<Configuracao, 'id' | 'atualizadoEm'>
 >;
 
 /** Configuração única da loja (linha id=1), mantida em cache na memória. */

@@ -1,4 +1,4 @@
-import { ClipboardList, Home, KeyRound, LogOut, Package, Receipt, Settings, ShoppingCart, Truck, Users, Wallet, type LucideIcon } from 'lucide-react';
+import { ClipboardList, Home, KeyRound, LogOut, Package, Receipt, Settings, ShoppingCart, Tags, Truck, Users, Wallet, type LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { NOMES_PERFIL } from '../lib/formato';
@@ -19,9 +19,9 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
     itens: [
       { para: '/vendas', rotulo: 'Vendas', icone: ShoppingCart, emBreve: true },
       { para: '/caixa', rotulo: 'Caixa', icone: Wallet, emBreve: true },
-      { para: '/produtos', rotulo: 'Produtos', icone: Package, emBreve: true },
+      { para: '/produtos', rotulo: 'Produtos', icone: Package },
       { para: '/estoque', rotulo: 'Estoque', icone: ClipboardList, emBreve: true },
-      { para: '/fornecedores', rotulo: 'Fornecedores', icone: Truck, emBreve: true },
+      { para: '/fornecedores', rotulo: 'Fornecedores', icone: Truck, permissao: 'fornecedor.ver' },
       { para: '/relatorios', rotulo: 'Relatórios', icone: Receipt, emBreve: true },
     ],
   },
@@ -29,6 +29,7 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
     grupo: 'Administração',
     itens: [
       { para: '/usuarios', rotulo: 'Usuários', icone: Users, permissao: 'usuarios.gerenciar' },
+      { para: '/cadastros', rotulo: 'Categorias e unidades', icone: Tags, permissao: 'cadastros.editar' },
       { para: '/configuracoes', rotulo: 'Configurações', icone: Settings, permissao: 'configuracao.editar' },
       { para: '/auditoria', rotulo: 'Auditoria', icone: ClipboardList, permissao: 'auditoria.ver' },
     ],
@@ -86,7 +87,7 @@ export function Layout() {
                       ) : (
                         <NavLink
                           to={para}
-                          end
+                          end={para === '/'}
                           className={({ isActive }) =>
                             `flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
                               isActive ? 'bg-marca-600 text-white' : 'hover:bg-stone-800 hover:text-white'

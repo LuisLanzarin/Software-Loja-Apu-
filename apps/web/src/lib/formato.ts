@@ -23,3 +23,19 @@ export const NOMES_PERFIL = {
   ADMIN: 'Administrador',
 } as const;
 export type Perfil = keyof typeof NOMES_PERFIL;
+
+/** Percentual em pontos-base → "15,00%". */
+export const formatarPct = (bp: number) =>
+  `${(bp / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+
+/** Quantidade em milésimos → "2,5" (sem casas quando a unidade não é fracionável). */
+export const formatarQtd = (milesimos: number) =>
+  (milesimos / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+
+/** CNPJ/CPF só com dígitos/letras → com máscara. */
+export function formatarDocumento(doc: string | null) {
+  if (!doc) return '';
+  if (doc.length === 11) return doc.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  if (doc.length === 14) return doc.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5');
+  return doc;
+}

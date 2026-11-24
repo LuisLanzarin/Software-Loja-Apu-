@@ -4,7 +4,7 @@ import { useUsuario } from '../lib/sessao';
 
 const ETAPAS = [
   { nome: 'Login, usuários, perfis e configurações', feita: true },
-  { nome: 'Produtos, fornecedores e formação de preço', feita: false },
+  { nome: 'Produtos, fornecedores e formação de preço', feita: true },
   { nome: 'Entrada de mercadoria e controle de estoque', feita: false },
   { nome: 'Vendas, orçamentos e caixa', feita: false },
   { nome: 'Relatórios de fechamento e backup automático', feita: false },

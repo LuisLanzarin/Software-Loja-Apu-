@@ -8,6 +8,12 @@ export type Permissao =
   | 'configuracao.editar'
   | 'auditoria.ver'
   | 'produto.ver_custo'
+  | 'produto.editar'
+  | 'preco.reajustar'
+  | 'precificacao.editar'
+  | 'fornecedor.ver'
+  | 'fornecedor.editar'
+  | 'cadastros.editar'
   | 'venda.autorizar';
 
 export interface Sessao {

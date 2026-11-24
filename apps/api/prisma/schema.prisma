@@ -34,6 +34,7 @@ model Usuario {
 
   sessoes   Sessao[]
   auditoria Auditoria[]
+  historicoPrecos HistoricoPreco[]
 }
 
 model Sessao {
@@ -59,6 +60,12 @@ model Configuracao {
   cancelamentoMaxSemAutorizacao Int   @default(10000)
   // Logout automático após X minutos sem uso.
   sessaoInatividadeMin       Int      @default(30)
+
+  // Formação de preço (markup divisor), em pontos-base sobre o preço de venda.
+  impostosPct                Int      @default(600)
+  despesasFixasPct           Int      @default(1500)
+  comissaoPct                Int      @default(0)
+  margemPadraoPct            Int      @default(2000)
   atualizadoEm               DateTime @updatedAt
 }
 
@@ -75,4 +82,120 @@ model Auditoria {
 
   @@index([criadoEm])
   @@index([usuarioId])
+}
+
+// ---------------------------------------------------------------- Etapa 2
+
+model Unidade {
+  id          Int     @id @default(autoincrement())
+  sigla       String  @unique
+  nome        String
+  // Aceita quantidade quebrada (2,5 m). "UN" e "PC" normalmente não.
+  fracionavel Boolean @default(false)
+  ativo       Boolean @default(true)
+
+  produtos   Produto[]
+  conversoes ProdutoConversao[]
+}
+
+model Categoria {
+  id           Int     @id @default(autoincrement())
+  nome         String  @unique
+  // Margem desejada padrão para os produtos desta categoria (pontos-base). Nulo = usa a da loja.
+  margemPct    Int?
+  ativo        Boolean @default(true)
+
+  produtos Produto[]
+}
+
+model Fornecedor {
+  id               Int      @id @default(autoincrement())
+  razaoSocial      String
+  nomeFantasia     String?
+  documento        String?  @unique // CNPJ ou CPF, só dígitos
+  telefone         String?
+  email            String?
+  contato          String?
+  cidade           String?
+  uf               String?
+  prazoEntregaDias Int?
+  observacoes      String?
+  ativo            Boolean  @default(true)
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+
+  produtos ProdutoFornecedor[]
+}
+
+model Produto {
+  id             Int        @id @default(autoincrement())
+  codigo         String     @unique
+  codigoBarras   String?    @unique
+  descricao      String
+  // Descrição em minúsculas e sem acentos, usada na busca.
+  descricaoBusca String
+  marca          String?
+  categoriaId    Int?
+  categoria      Categoria? @relation(fields: [categoriaId], references: [id])
+  // Unidade em que o produto é vendido e controlado no estoque.
+  unidadeId      Int
+  unidade        Unidade    @relation(fields: [unidadeId], references: [id])
+  // Custo por unidade de venda (centavos).
+  custo          Int        @default(0)
+  // Preço de venda por unidade de venda (centavos).
+  precoVenda     Int        @default(0)
+  // Margem desejada (pontos-base). Nulo = herda da categoria ou da loja.
+  margemPct      Int?
+  estoqueMinimo  Int        @default(0) // milésimos
+  localizacao    String?
+  observacoes    String?
+  ativo          Boolean    @default(true)
+  criadoEm       DateTime   @default(now())
+  atualizadoEm   DateTime   @updatedAt
+
+  conversoes    ProdutoConversao[]
+  fornecedores  ProdutoFornecedor[]
+  historicoPrecos HistoricoPreco[]
+
+  @@index([descricaoBusca])
+  @@index([categoriaId])
+}
+
+/// Unidade de compra: 1 CX = 2,5 M2 → unidadeId = CX, fator = 2500 (milésimos da unidade de venda).
+model ProdutoConversao {
+  id        Int     @id @default(autoincrement())
+  produtoId Int
+  produto   Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  unidadeId Int
+  unidade   Unidade @relation(fields: [unidadeId], references: [id])
+  fator     Int
+
+  @@unique([produtoId, unidadeId])
+}
+
+model ProdutoFornecedor {
+  produtoId        Int
+  produto          Produto    @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  fornecedorId     Int
+  fornecedor       Fornecedor @relation(fields: [fornecedorId], references: [id])
+  codigoFornecedor String?
+
+  @@id([produtoId, fornecedorId])
+  @@index([fornecedorId])
+}
+
+model HistoricoPreco {
+  id             Int      @id @default(autoincrement())
+  produtoId      Int
+  produto        Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  custoAnterior  Int
+  custoNovo      Int
+  precoAnterior  Int
+  precoNovo      Int
+  motivo         String
+  usuarioId      Int?
+  usuario        Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  criadoEm       DateTime @default(now())
+
+  @@index([produtoId, criadoEm])
 }

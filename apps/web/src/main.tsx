@@ -14,6 +14,11 @@ import { Entrar } from './pages/Entrar';
 import { Inicio } from './pages/Inicio';
 import { MinhaSenha, TrocarSenhaObrigatoria } from './pages/TrocarSenha';
 import { Usuarios } from './pages/Usuarios';
+import { Cadastros } from './pages/Cadastros';
+import { Fornecedores } from './pages/Fornecedores';
+import { ProdutoForm } from './pages/produtos/ProdutoForm';
+import { Produtos } from './pages/produtos/Produtos';
+import { Reajuste } from './pages/produtos/Reajuste';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +59,12 @@ function App() {
       <Route element={<Layout />}>
         <Route index element={<Inicio />} />
         <Route path="minha-senha" element={<MinhaSenha />} />
+        <Route path="produtos" element={<Produtos />} />
+        <Route path="produtos/novo" element={<SoCom permissao="produto.editar"><ProdutoForm /></SoCom>} />
+        <Route path="produtos/reajuste" element={<SoCom permissao="preco.reajustar"><Reajuste /></SoCom>} />
+        <Route path="produtos/:id" element={<SoCom permissao="produto.editar"><ProdutoForm /></SoCom>} />
+        <Route path="fornecedores" element={<SoCom permissao="fornecedor.ver"><Fornecedores /></SoCom>} />
+        <Route path="cadastros" element={<SoCom permissao="cadastros.editar"><Cadastros /></SoCom>} />
         <Route path="usuarios" element={<SoCom permissao="usuarios.gerenciar"><Usuarios /></SoCom>} />
         <Route path="configuracoes" element={<SoCom permissao="configuracao.editar"><Configuracoes /></SoCom>} />
         <Route path="auditoria" element={<SoCom permissao="auditoria.ver"><Auditoria /></SoCom>} />

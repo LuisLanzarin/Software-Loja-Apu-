@@ -1,5 +1,5 @@
 import { Loader2, X } from 'lucide-react';
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -58,6 +58,18 @@ export function Campo({
       ) : (
         ajuda && <p className="mt-1 text-xs text-stone-500">{ajuda}</p>
       )}
+    </div>
+  );
+}
+
+export function AreaTexto({ rotulo, className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement> & { rotulo: string }) {
+  const id = useId();
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-stone-700">
+        {rotulo}
+      </label>
+      <textarea id={id} rows={3} {...p} className={estiloCampo} />
     </div>
   );
 }
@@ -133,7 +145,7 @@ export function Cabecalho({ titulo, descricao, acoes }: { titulo: string; descri
 }
 
 /** Janela modal usando o <dialog> nativo (foco e tecla Esc já tratados pelo navegador). */
-export function Janela({ aberta, aoFechar, titulo, children }: { aberta: boolean; aoFechar: () => void; titulo: string; children: ReactNode }) {
+export function Janela({ aberta, aoFechar, titulo, children, largura = 'max-w-md' }: { aberta: boolean; aoFechar: () => void; titulo: string; children: ReactNode; largura?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -143,7 +155,7 @@ export function Janela({ aberta, aoFechar, titulo, children }: { aberta: boolean
   }, [aberta]);
 
   return (
-    <dialog ref={ref} onClose={aoFechar} className="m-auto w-full max-w-md rounded-lg p-0 shadow-xl">
+    <dialog ref={ref} onClose={aoFechar} className={`m-auto w-full ${largura} rounded-lg p-0 shadow-xl`}>
       {aberta && (
         <div>
           <header className="flex items-center justify-between border-b border-stone-200 px-5 py-3.5">
@@ -165,4 +177,50 @@ export function Carregando() {
       <Loader2 className="size-6 animate-spin" aria-label="Carregando" />
     </div>
   );
+}
+
+/** Tabela padrão: cabeçalho cinza, linhas separadas, rolagem horizontal se faltar espaço. */
+export function Tabela({ colunas, children, vazio }: { colunas: { titulo: string; direita?: boolean }[]; children: ReactNode; vazio?: ReactNode }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
+          <tr>
+            {colunas.map((c) => (
+              <th key={c.titulo} className={cx('px-4 py-3 whitespace-nowrap', c.direita && 'text-right')}>
+                {c.titulo}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-stone-100">{children}</tbody>
+      </table>
+      {vazio}
+    </div>
+  );
+}
+
+export function Vazio({ children }: { children: ReactNode }) {
+  return <p className="px-4 py-10 text-center text-sm text-stone-500">{children}</p>;
+}
+
+export function Paginacao({ pagina, total, porPagina, aoMudar }: { pagina: number; total: number; porPagina: number; aoMudar: (p: number) => void }) {
+  const paginas = Math.max(1, Math.ceil(total / porPagina));
+  return (
+    <div className="mt-4 flex items-center justify-between gap-3 text-sm text-stone-600">
+      <span>{total.toLocaleString('pt-BR')} registro(s)</span>
+      <div className="flex items-center gap-3">
+        <span>Página {pagina} de {paginas}</span>
+        <Botao variante="secundario" disabled={pagina <= 1} onClick={() => aoMudar(pagina - 1)}>Anterior</Botao>
+        <Botao variante="secundario" disabled={pagina >= paginas} onClick={() => aoMudar(pagina + 1)}>Próxima</Botao>
+      </div>
+    </div>
+  );
+}
+
+/** Margem colorida: vermelho = prejuízo, âmbar = abaixo do desejado, verde = ok. */
+export function Margem({ real, desejada }: { real: number | null | undefined; desejada?: number }) {
+  if (real == null) return <span className="text-stone-400">—</span>;
+  const cor = real < 0 ? 'text-red-700' : desejada !== undefined && real < desejada - 50 ? 'text-amber-700' : 'text-emerald-700';
+  return <span className={cx('font-medium tabular-nums', cor)}>{(real / 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</span>;
 }

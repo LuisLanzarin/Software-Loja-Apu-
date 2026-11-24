@@ -6,6 +6,9 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { AuditoriaModule } from './auditoria/auditoria.module.ts';
 import { AuthModule } from './auth/auth.module.ts';
+import { CadastrosModule } from './cadastros/cadastros.module.ts';
+import { FornecedoresModule } from './fornecedores/fornecedores.module.ts';
+import { ProdutosModule } from './produtos/produtos.module.ts';
 import { ConfiguracaoModule } from './configuracao/configuracao.module.ts';
 import { API_ROOT } from './paths.ts';
 import { PrismaModule } from './prisma/prisma.module.ts';
@@ -30,6 +33,9 @@ const WEB_DIST = resolve(API_ROOT, '..', 'web', 'dist');
     AuthModule,
     SetupModule,
     UsuariosModule,
+    CadastrosModule,
+    FornecedoresModule,
+    ProdutosModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

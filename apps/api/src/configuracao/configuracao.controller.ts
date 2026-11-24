@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { AuditoriaService } from '../auditoria/auditoria.service.ts';
 import { RequerPermissao, UsuarioAtual } from '../auth/decorators.ts';
 import type { UsuarioSessao } from '../auth/sessao.service.ts';
+import { pontosBase } from '../common/esquemas.ts';
+import { temPermissao } from '../common/permissoes.ts';
 import { ZodPipe } from '../common/zod.pipe.ts';
 import { ConfiguracaoService } from './configuracao.service.ts';
 
@@ -16,6 +18,19 @@ const schema = z.object({
   sessaoInatividadeMin: z.number().int().min(5, 'Mínimo de 5 minutos').max(720, 'Máximo de 12 horas'),
 });
 
+const precificacaoSchema = z
+  .object({
+    impostosPct: pontosBase,
+    despesasFixasPct: pontosBase,
+    comissaoPct: pontosBase,
+    margemPadraoPct: pontosBase,
+  })
+  .refine((p) => p.impostosPct + p.despesasFixasPct + p.comissaoPct + p.margemPadraoPct < 10000, {
+    message: 'Impostos + despesas + comissão + margem precisam somar menos de 100%',
+  });
+
+const CAMPOS_PRECIFICACAO = ['impostosPct', 'despesasFixasPct', 'comissaoPct', 'margemPadraoPct'] as const;
+
 @Controller('configuracao')
 export class ConfiguracaoController {
   constructor(
@@ -24,8 +39,29 @@ export class ConfiguracaoController {
   ) {}
 
   @Get()
-  obter() {
-    return this.config.obter();
+  async obter(@UsuarioAtual() u: UsuarioSessao) {
+    const c: Record<string, unknown> = { ...(await this.config.obter()) };
+    if (!temPermissao(u.perfil, 'produto.ver_custo')) for (const k of CAMPOS_PRECIFICACAO) delete c[k];
+    return c;
+  }
+
+  @Put('precificacao')
+  @RequerPermissao('precificacao.editar')
+  async atualizarPrecificacao(
+    @Body(new ZodPipe(precificacaoSchema)) body: z.infer<typeof precificacaoSchema>,
+    @UsuarioAtual() u: UsuarioSessao,
+    @Req() req: Request,
+  ) {
+    const antes = await this.config.obter();
+    const depois = await this.config.atualizar(body);
+    await this.auditoria.registrar('precificacao.alterada', {
+      usuarioId: u.id,
+      entidade: 'Configuracao',
+      entidadeId: 1,
+      detalhes: { antes: Object.fromEntries(CAMPOS_PRECIFICACAO.map((k) => [k, antes[k]])), depois: body },
+      ip: req.ip,
+    });
+    return depois;
   }
 
   @Put()
@@ -41,7 +77,10 @@ export class ConfiguracaoController {
       usuarioId: u.id,
       entidade: 'Configuracao',
       entidadeId: 1,
-      detalhes: { antes, depois: body },
+      detalhes: {
+        antes: { nomeLoja: antes.nomeLoja, descontoMaxSemAutorizacao: antes.descontoMaxSemAutorizacao, cancelamentoMaxSemAutorizacao: antes.cancelamentoMaxSemAutorizacao, sessaoInatividadeMin: antes.sessaoInatividadeMin },
+        depois: body,
+      },
       ip: req.ip,
     });
     return depois;
