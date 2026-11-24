@@ -14,6 +14,9 @@ export type Permissao =
   | 'fornecedor.ver'
   | 'fornecedor.editar'
   | 'cadastros.editar'
+  | 'estoque.entrada'
+  | 'estoque.ajustar'
+  | 'estoque.cancelar_entrada'
   | 'venda.autorizar';
 
 export interface Sessao {

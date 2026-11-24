@@ -19,6 +19,12 @@ import { Fornecedores } from './pages/Fornecedores';
 import { ProdutoForm } from './pages/produtos/ProdutoForm';
 import { Produtos } from './pages/produtos/Produtos';
 import { Reajuste } from './pages/produtos/Reajuste';
+import { EntradaDetalhe } from './pages/estoque/EntradaDetalhe';
+import { EntradaNova } from './pages/estoque/EntradaNova';
+import { Entradas } from './pages/estoque/Entradas';
+import { Estoque } from './pages/estoque/Estoque';
+import { EstoqueProduto } from './pages/estoque/EstoqueProduto';
+import { Inventario } from './pages/estoque/Inventario';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +69,12 @@ function App() {
         <Route path="produtos/novo" element={<SoCom permissao="produto.editar"><ProdutoForm /></SoCom>} />
         <Route path="produtos/reajuste" element={<SoCom permissao="preco.reajustar"><Reajuste /></SoCom>} />
         <Route path="produtos/:id" element={<SoCom permissao="produto.editar"><ProdutoForm /></SoCom>} />
+        <Route path="estoque" element={<Estoque />} />
+        <Route path="estoque/inventario" element={<SoCom permissao="estoque.ajustar"><Inventario /></SoCom>} />
+        <Route path="estoque/:id" element={<EstoqueProduto />} />
+        <Route path="entradas" element={<SoCom permissao="estoque.entrada"><Entradas /></SoCom>} />
+        <Route path="entradas/nova" element={<SoCom permissao="estoque.entrada"><EntradaNova /></SoCom>} />
+        <Route path="entradas/:id" element={<SoCom permissao="estoque.entrada"><EntradaDetalhe /></SoCom>} />
         <Route path="fornecedores" element={<SoCom permissao="fornecedor.ver"><Fornecedores /></SoCom>} />
         <Route path="cadastros" element={<SoCom permissao="cadastros.editar"><Cadastros /></SoCom>} />
         <Route path="usuarios" element={<SoCom permissao="usuarios.gerenciar"><Usuarios /></SoCom>} />

@@ -54,3 +54,30 @@ describe('Busca', () => {
     expect(normalizarBusca('  Cimento  CP-II  Água ')).toBe('cimento cp-ii agua');
   });
 });
+
+import { custoMedio, custoMedioAposEstorno, ratear } from '../src/estoque/calculos';
+
+describe('Estoque: custo médio ponderado', () => {
+  it('pondera pelo saldo: 25 a R$ 30,23 + 10 a R$ 34,00 → R$ 31,31', () => {
+    expect(custoMedio(25000, 3023, 10000, 3400)).toBe(3131);
+  });
+  it('estoque zerado ou negativo: vale o custo da nova compra', () => {
+    expect(custoMedio(0, 3000, 5000, 3500)).toBe(3500);
+    expect(custoMedio(-2000, 3000, 5000, 3500)).toBe(3500);
+  });
+  it('estorno desfaz o efeito da entrada no custo', () => {
+    expect(custoMedioAposEstorno(35000, 3131, 10000, 34000, 3023)).toBe(3023);
+    expect(custoMedioAposEstorno(10000, 3400, 10000, 34000, 2900)).toBe(2900);
+  });
+});
+
+describe('Estoque: rateio de frete e desconto', () => {
+  it('distribui proporcionalmente e a soma bate exatamente', () => {
+    const r = ratear([75000, 56000], 1000);
+    expect(r).toEqual([572, 428]);
+    expect(ratear([333, 333, 334], 100).reduce((a, b) => a + b, 0)).toBe(100);
+  });
+  it('desconto (valor negativo) também é rateado', () => {
+    expect(ratear([5000, 5000], -1001).reduce((a, b) => a + b, 0)).toBe(-1001);
+  });
+});

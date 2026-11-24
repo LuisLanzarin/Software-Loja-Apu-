@@ -6,7 +6,7 @@ import type { UsuarioSessao } from '../auth/sessao.service.ts';
 import { temPermissao } from '../common/permissoes.ts';
 import { ZodPipe } from '../common/zod.pipe.ts';
 import { filtroProdutosSchema, produtoSchema, reajusteSchema, type DadosProduto, type DadosReajuste, type FiltroProdutos } from './produtos.schemas.ts';
-import { POR_PAGINA, ProdutosService } from './produtos.service.ts';
+import { ProdutosService } from './produtos.service.ts';
 
 @Controller('produtos')
 export class ProdutosController {
@@ -19,7 +19,7 @@ export class ProdutosController {
   @Get()
   async listar(@Query(new ZodPipe(filtroProdutosSchema)) f: FiltroProdutos, @UsuarioAtual() u: UsuarioSessao) {
     const { itens, total } = await this.produtos.listar(f);
-    return { itens: await this.produtos.apresentar(itens, temPermissao(u.perfil, 'produto.ver_custo')), total, pagina: f.pagina, porPagina: POR_PAGINA };
+    return { itens: await this.produtos.apresentar(itens, temPermissao(u.perfil, 'produto.ver_custo')), total, pagina: f.pagina, porPagina: f.porPagina };
   }
 
   @Get('parametros-preco')

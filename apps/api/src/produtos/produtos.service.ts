@@ -6,7 +6,6 @@ import type { Prisma } from '../generated/prisma/client.ts';
 import { PrismaService } from '../prisma/prisma.service.ts';
 import { TIPOS_REAJUSTE, type DadosProduto, type DadosReajuste, type FiltroProdutos } from './produtos.schemas.ts';
 
-export const POR_PAGINA = 50;
 
 /** Campos que só quem tem "produto.ver_custo" pode ver. */
 const CAMPOS_RESTRITOS = ['custo', 'margemPct', 'margemEfetiva', 'precoSugerido', 'margemReal', 'fornecedores'] as const;
@@ -51,6 +50,8 @@ export class ProdutosService {
       ...(f.situacao === 'todos' ? {} : { ativo: f.situacao === 'ativos' }),
       ...(f.categoriaId ? { categoriaId: f.categoriaId } : {}),
       ...(f.fornecedorId ? { fornecedores: { some: { fornecedorId: f.fornecedorId } } } : {}),
+      ...(f.estoque === 'abaixo_minimo' ? { estoqueMinimo: { gt: 0 }, estoqueAtual: { lt: this.prisma.produto.fields.estoqueMinimo } } : {}),
+      ...(f.estoque === 'sem_estoque' ? { estoqueAtual: { lte: 0 } } : {}),
     };
     const q = f.q?.trim();
     if (q) {
@@ -68,8 +69,8 @@ export class ProdutosService {
       this.prisma.produto.findMany({
         where,
         orderBy: { descricao: 'asc' },
-        skip: (f.pagina - 1) * POR_PAGINA,
-        take: POR_PAGINA,
+        skip: (f.pagina - 1) * f.porPagina,
+        take: f.porPagina,
         include: { categoria: { select: { nome: true, margemPct: true } }, unidade: { select: { sigla: true, fracionavel: true } } },
       }),
       this.prisma.produto.count({ where }),

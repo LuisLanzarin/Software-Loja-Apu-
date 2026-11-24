@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { Botao, Cabecalho, Carregando, Cartao, Etiqueta, Margem, Paginacao, Selecao, Tabela, Vazio } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useCategorias } from '../../lib/consultas';
-import { formatarReais } from '../../lib/formato';
+import { formatarQtd, formatarReais } from '../../lib/formato';
 import { usePode } from '../../lib/sessao';
 import type { Pagina, Produto } from '../../lib/tipos';
 
@@ -38,7 +38,7 @@ export function Produtos() {
     { titulo: 'Código' },
     { titulo: 'Descrição' },
     { titulo: 'Categoria' },
-    { titulo: 'Un.' },
+    { titulo: 'Estoque', direita: true },
     ...(verCusto ? [{ titulo: 'Custo', direita: true }] : []),
     { titulo: 'Preço', direita: true },
     ...(verCusto ? [{ titulo: 'Margem', direita: true }] : []),
@@ -108,7 +108,9 @@ export function Produtos() {
                   {p.localizacao && <span className="block text-xs text-stone-500">Local: {p.localizacao}</span>}
                 </td>
                 <td className="px-4 py-2.5 text-stone-600">{p.categoria?.nome ?? '—'}</td>
-                <td className="px-4 py-2.5 text-stone-600">{p.unidade.sigla}</td>
+                <td className={`px-4 py-2.5 text-right whitespace-nowrap tabular-nums ${p.estoqueAtual <= 0 ? 'text-red-700' : p.estoqueMinimo > 0 && p.estoqueAtual < p.estoqueMinimo ? 'text-amber-700' : 'text-stone-600'}`}>
+                  {formatarQtd(p.estoqueAtual)} {p.unidade.sigla}
+                </td>
                 {verCusto && <td className="px-4 py-2.5 text-right tabular-nums text-stone-600">{formatarReais(p.custo ?? 0)}</td>}
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums">{formatarReais(p.precoVenda)}</td>
                 {verCusto && (

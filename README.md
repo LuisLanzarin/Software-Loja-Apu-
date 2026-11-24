@@ -45,6 +45,14 @@ Markup divisor: `preço = custo ÷ (1 − impostos − despesas fixas − comiss
 A margem desejada vem do produto; se estiver em branco, da categoria; senão, a padrão da loja.
 Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exatamente 15% líquidos.
 
+## Estoque
+
+- O saldo nunca é editado direto: toda alteração é uma **movimentação** (compra, perda, ajuste, inventário, venda),
+  gravada na mesma transação que atualiza o saldo. O saldo é sempre a soma das movimentações.
+- **Custo médio ponderado** recalculado a cada entrada, já com frete, despesas e desconto rateados pelo valor dos itens.
+- Notas em unidade de compra (CX, RL…) são convertidas para a unidade de venda pelo fator do cadastro.
+- Cancelar uma entrada desfaz o saldo e o custo, e só é permitido se o material ainda estiver em estoque.
+
 ## Perfis
 
 | Permissão | Vendedor | Financeiro | Gerente | Admin |
@@ -53,6 +61,9 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 | Ver custo, margem e fornecedores | | ✅ | ✅ | ✅ |
 | Cadastrar produtos, fornecedores, categorias e unidades | | ✅ | ✅ | ✅ |
 | Formação de preço e reajuste em lote | | ✅ | ✅ | ✅ |
+| Consultar saldo e movimentações de estoque | ✅ | ✅ | ✅ | ✅ |
+| Lançar entrada de mercadoria | | ✅ | ✅ | ✅ |
+| Ajustes, perdas, inventário e cancelar entrada | | | ✅ | ✅ |
 | Autorizar desconto/cancelamento acima do limite | | | ✅ | ✅ |
 | Editar configurações | | | ✅ | ✅ |
 | Ver auditoria | | | ✅ | ✅ |
@@ -64,6 +75,6 @@ A matriz fica em `apps/api/src/common/permissoes.ts`.
 
 - [x] 1. Login, usuários, perfis, configurações e auditoria
 - [x] 2. Produtos, fornecedores e formação de preço
-- [ ] 3. Entrada de mercadoria e controle de estoque
+- [x] 3. Entrada de mercadoria e controle de estoque
 - [ ] 4. Vendas, orçamentos e caixa
 - [ ] 5. Relatórios de fechamento, backup automático e instalação como serviço do Windows

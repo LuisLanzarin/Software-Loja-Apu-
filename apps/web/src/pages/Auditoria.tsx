@@ -37,6 +37,10 @@ const ACOES: Record<string, string> = {
   'categoria.alterada': 'Alterou categoria',
   'unidade.criada': 'Criou unidade',
   'unidade.alterada': 'Alterou unidade',
+  'entrada.criada': 'Lançou entrada de mercadoria',
+  'entrada.cancelada': 'Cancelou entrada de mercadoria',
+  'estoque.ajuste': 'Ajustou estoque',
+  'estoque.inventario': 'Gravou inventário',
 };
 
 export function Auditoria() {

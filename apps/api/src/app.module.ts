@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { AuditoriaModule } from './auditoria/auditoria.module.ts';
 import { AuthModule } from './auth/auth.module.ts';
 import { CadastrosModule } from './cadastros/cadastros.module.ts';
+import { EstoqueModule } from './estoque/estoque.module.ts';
 import { FornecedoresModule } from './fornecedores/fornecedores.module.ts';
 import { ProdutosModule } from './produtos/produtos.module.ts';
 import { ConfiguracaoModule } from './configuracao/configuracao.module.ts';
@@ -36,6 +37,7 @@ const WEB_DIST = resolve(API_ROOT, '..', 'web', 'dist');
     CadastrosModule,
     FornecedoresModule,
     ProdutosModule,
+    EstoqueModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

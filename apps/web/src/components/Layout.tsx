@@ -1,4 +1,4 @@
-import { ClipboardList, Home, KeyRound, LogOut, Package, Receipt, Settings, ShoppingCart, Tags, Truck, Users, Wallet, type LucideIcon } from 'lucide-react';
+import { ClipboardList, Home, KeyRound, LogOut, Package, Receipt, Settings, PackagePlus, ShoppingCart, Tags, Truck, Warehouse, Users, Wallet, type LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { NOMES_PERFIL } from '../lib/formato';
@@ -20,7 +20,8 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
       { para: '/vendas', rotulo: 'Vendas', icone: ShoppingCart, emBreve: true },
       { para: '/caixa', rotulo: 'Caixa', icone: Wallet, emBreve: true },
       { para: '/produtos', rotulo: 'Produtos', icone: Package },
-      { para: '/estoque', rotulo: 'Estoque', icone: ClipboardList, emBreve: true },
+      { para: '/estoque', rotulo: 'Estoque', icone: Warehouse },
+      { para: '/entradas', rotulo: 'Entradas', icone: PackagePlus, permissao: 'estoque.entrada' },
       { para: '/fornecedores', rotulo: 'Fornecedores', icone: Truck, permissao: 'fornecedor.ver' },
       { para: '/relatorios', rotulo: 'Relatórios', icone: Receipt, emBreve: true },
     ],

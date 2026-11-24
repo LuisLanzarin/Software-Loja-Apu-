@@ -42,6 +42,7 @@ export interface Produto {
   unidade: { sigla: string; fracionavel: boolean };
   precoVenda: number;
   estoqueMinimo: number;
+  estoqueAtual: number;
   localizacao: string | null;
   observacoes: string | null;
   ativo: boolean;
@@ -67,4 +68,11 @@ export interface Pagina<T> {
   total: number;
   pagina: number;
   porPagina: number;
+}
+
+export interface Resumo {
+  ativos: number;
+  abaixoMinimo: number;
+  semEstoque: number;
+  valorEstoque?: number;
 }

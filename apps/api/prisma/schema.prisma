@@ -35,6 +35,9 @@ model Usuario {
   sessoes   Sessao[]
   auditoria Auditoria[]
   historicoPrecos HistoricoPreco[]
+  movimentacoes MovimentacaoEstoque[]
+  entradas  Entrada[] @relation("EntradaCriadaPor")
+  entradasCanceladas Entrada[] @relation("EntradaCanceladaPor")
 }
 
 model Sessao {
@@ -96,6 +99,7 @@ model Unidade {
 
   produtos   Produto[]
   conversoes ProdutoConversao[]
+  itensEntrada EntradaItem[]
 }
 
 model Categoria {
@@ -125,6 +129,7 @@ model Fornecedor {
   atualizadoEm     DateTime @updatedAt
 
   produtos ProdutoFornecedor[]
+  entradas Entrada[]
 }
 
 model Produto {
@@ -147,6 +152,9 @@ model Produto {
   // Margem desejada (pontos-base). Nulo = herda da categoria ou da loja.
   margemPct      Int?
   estoqueMinimo  Int        @default(0) // milésimos
+  // Saldo atual (milésimos). É um cache: a verdade são as movimentações,
+  // e ele é atualizado na MESMA transação de cada movimentação.
+  estoqueAtual   Int        @default(0)
   localizacao    String?
   observacoes    String?
   ativo          Boolean    @default(true)
@@ -156,6 +164,8 @@ model Produto {
   conversoes    ProdutoConversao[]
   fornecedores  ProdutoFornecedor[]
   historicoPrecos HistoricoPreco[]
+  movimentacoes MovimentacaoEstoque[]
+  itensEntrada  EntradaItem[]
 
   @@index([descricaoBusca])
   @@index([categoriaId])
@@ -198,4 +208,92 @@ model HistoricoPreco {
   criadoEm       DateTime @default(now())
 
   @@index([produtoId, criadoEm])
+}
+
+// ---------------------------------------------------------------- Etapa 3
+
+enum TipoMovimentacao {
+  ENTRADA_COMPRA
+  ESTORNO_COMPRA
+  AJUSTE_ENTRADA
+  AJUSTE_SAIDA
+  PERDA
+  INVENTARIO
+  VENDA
+  ESTORNO_VENDA
+}
+
+/// Livro de movimentações: o estoque nunca é editado direto.
+model MovimentacaoEstoque {
+  id            Int              @id @default(autoincrement())
+  produtoId     Int
+  produto       Produto          @relation(fields: [produtoId], references: [id])
+  tipo          TipoMovimentacao
+  quantidade    Int              // milésimos; positivo entra, negativo sai
+  saldoApos     Int              // milésimos
+  custoUnitario Int              // centavos por unidade de venda, no momento
+  motivo        String?
+  entradaId     Int?
+  entrada       Entrada?         @relation(fields: [entradaId], references: [id])
+  usuarioId     Int?
+  usuario       Usuario?         @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  criadoEm      DateTime         @default(now())
+
+  @@index([produtoId, id])
+  @@index([criadoEm])
+  @@index([entradaId])
+}
+
+enum StatusEntrada {
+  FINALIZADA
+  CANCELADA
+}
+
+/// Entrada de mercadoria (compra / nota do fornecedor).
+model Entrada {
+  id                 Int           @id @default(autoincrement())
+  fornecedorId       Int?
+  fornecedor         Fornecedor?   @relation(fields: [fornecedorId], references: [id])
+  numeroNota         String?
+  dataEmissao        DateTime?
+  // Centavos. Rateados entre os itens proporcionalmente ao valor de cada um.
+  frete              Int           @default(0)
+  outrasDespesas     Int           @default(0)
+  desconto           Int           @default(0)
+  totalProdutos      Int
+  totalNota          Int
+  observacoes        String?
+  status             StatusEntrada @default(FINALIZADA)
+  usuarioId          Int?
+  usuario            Usuario?      @relation("EntradaCriadaPor", fields: [usuarioId], references: [id], onDelete: SetNull)
+  criadoEm           DateTime      @default(now())
+  canceladaEm        DateTime?
+  canceladaPorId     Int?
+  canceladaPor       Usuario?      @relation("EntradaCanceladaPor", fields: [canceladaPorId], references: [id], onDelete: SetNull)
+  motivoCancelamento String?
+
+  itens         EntradaItem[]
+  movimentacoes MovimentacaoEstoque[]
+
+  @@index([criadoEm])
+  @@index([fornecedorId])
+}
+
+model EntradaItem {
+  id                Int     @id @default(autoincrement())
+  entradaId         Int
+  entrada           Entrada @relation(fields: [entradaId], references: [id], onDelete: Cascade)
+  produtoId         Int
+  produto           Produto @relation(fields: [produtoId], references: [id])
+  // Como veio na nota (ex.: 10 CX a R$ 75,00)
+  unidadeId         Int
+  unidade           Unidade @relation(fields: [unidadeId], references: [id])
+  fator             Int     // milésimos da unidade de venda por 1 unidade de compra (1000 = mesma unidade)
+  quantidade        Int     // milésimos, na unidade de compra
+  custoUnitario     Int     // centavos por unidade de compra
+  // Convertido para a unidade de venda, já com frete/despesas/desconto rateados
+  quantidadeEstoque Int     // milésimos
+  custoTotal        Int     // centavos (valor do item + rateio)
+  custoMedioAntes   Int
+  custoMedioDepois  Int
 }

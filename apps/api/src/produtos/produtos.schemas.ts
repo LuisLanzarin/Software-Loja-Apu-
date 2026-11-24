@@ -35,7 +35,10 @@ export const filtroProdutosSchema = z.object({
   categoriaId: z.coerce.number().int().positive().optional(),
   fornecedorId: z.coerce.number().int().positive().optional(),
   situacao: situacaoSchema,
+  estoque: z.enum(['todos', 'abaixo_minimo', 'sem_estoque']).default('todos'),
   pagina: z.coerce.number().int().min(1).default(1),
+  /** Inventário usa listas grandes de uma vez. */
+  porPagina: z.coerce.number().int().min(1).max(2000).default(50),
 });
 export type FiltroProdutos = z.infer<typeof filtroProdutosSchema>;
 

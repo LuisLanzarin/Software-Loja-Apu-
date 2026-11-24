@@ -17,6 +17,9 @@ export const PERMISSOES = {
   'fornecedor.ver': [FINANCEIRO, GERENTE, ADMIN],
   'fornecedor.editar': [FINANCEIRO, GERENTE, ADMIN],
   'cadastros.editar': [FINANCEIRO, GERENTE, ADMIN],
+  'estoque.entrada': [FINANCEIRO, GERENTE, ADMIN],
+  'estoque.ajustar': [GERENTE, ADMIN],
+  'estoque.cancelar_entrada': [GERENTE, ADMIN],
   'venda.autorizar': [GERENTE, ADMIN],
 } as const satisfies Record<string, readonly Perfil[]>;
 
