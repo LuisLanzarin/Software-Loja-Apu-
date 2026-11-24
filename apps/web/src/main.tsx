@@ -33,6 +33,8 @@ import { PDV } from './pages/vendas/PDV';
 import { Recibo } from './pages/vendas/Recibo';
 import { VendaDetalhe } from './pages/vendas/VendaDetalhe';
 import { Vendas } from './pages/vendas/Vendas';
+import { Backup } from './pages/Backup';
+import { Relatorios } from './pages/relatorios/Relatorios';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +80,8 @@ function App() {
         <Route path="caixa" element={<Caixa />} />
         <Route path="caixa/:id" element={<CaixaSessao />} />
         <Route path="clientes" element={<Clientes />} />
+        <Route path="relatorios" element={<SoCom permissao="relatorio.ver"><Relatorios /></SoCom>} />
+        <Route path="backup" element={<SoCom permissao="backup.gerenciar"><Backup /></SoCom>} />
         <Route path="boletos" element={<SoCom permissao="boleto.baixar"><Boletos /></SoCom>} />
         <Route index element={<Inicio />} />
         <Route path="minha-senha" element={<MinhaSenha />} />

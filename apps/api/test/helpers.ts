@@ -13,6 +13,8 @@ export async function criarAppDeTeste() {
   const pasta = mkdtempSync(join(tmpdir(), 'loja-teste-'));
   process.env.DATABASE_URL = `file:${join(pasta, 'teste.db')}`;
   process.env.LIMITE_REQUISICOES = 'desligado';
+  process.env.BACKUP_AUTOMATICO = 'desligado';
+  process.env.BACKUP_DIR = join(pasta, 'backups');
   execSync('npx prisma migrate deploy', { cwd: join(__dirname, '..'), env: process.env, stdio: 'ignore' });
 
   const { AppModule } = await import('../src/app.module');
@@ -30,6 +32,7 @@ export async function criarAppDeTeste() {
 
   return {
     app,
+    pasta,
     http,
     entrar,
     /** Cria o admin e devolve funções autenticadas. */
@@ -45,7 +48,7 @@ export async function criarAppDeTeste() {
       return c;
     },
     async fechar() {
-      await app.close();
+      await app.close().catch(() => undefined);
       rmSync(pasta, { recursive: true, force: true });
     },
   };

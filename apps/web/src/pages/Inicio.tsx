@@ -1,18 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
+import { AlertTriangle, BarChart3, PackagePlus, ShoppingCart, Wallet } from 'lucide-react';
 import { Link } from 'react-router';
 import { api } from '../lib/api';
 import type { Resumo } from '../lib/tipos';
-import { Cabecalho, Cartao } from '../components/ui';
+import { Cabecalho, Cartao, Margem } from '../components/ui';
+import { formatarReais } from '../lib/formato';
+import { usePode } from '../lib/sessao';
 import { useUsuario } from '../lib/sessao';
-
-const ETAPAS = [
-  { nome: 'Login, usuários, perfis e configurações', feita: true },
-  { nome: 'Produtos, fornecedores e formação de preço', feita: true },
-  { nome: 'Entrada de mercadoria e controle de estoque', feita: true },
-  { nome: 'Vendas, orçamentos e caixa', feita: true },
-  { nome: 'Relatórios de fechamento e backup automático', feita: false },
-];
 
 export function Inicio() {
   const u = useUsuario();
@@ -23,22 +17,8 @@ export function Inicio() {
     <>
       <Cabecalho titulo={`${saudacao}, ${u.nome.split(' ')[0]}!`} descricao={u.loja.nome} />
       <AlertasEstoque />
-      <Cartao titulo="Andamento do sistema" className="max-w-xl">
-        <ol className="space-y-3">
-          {ETAPAS.map((e, i) => (
-            <li key={e.nome} className="flex items-center gap-3 text-sm">
-              {e.feita ? (
-                <CheckCircle2 className="size-5 text-emerald-600" aria-label="Concluída" />
-              ) : (
-                <Circle className="size-5 text-stone-300" aria-label="Pendente" />
-              )}
-              <span className={e.feita ? 'text-stone-900' : 'text-stone-500'}>
-                Etapa {i + 1}: {e.nome}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </Cartao>
+      <ResumoDoDia />
+      <Atalhos />
     </>
   );
 }
@@ -59,6 +39,46 @@ function AlertasEstoque() {
           {data.semEstoque > 0 && <Link to="/estoque?filtro=sem_estoque" className="underline">{data.semEstoque} sem estoque</Link>}
         </p>
       </div>
+    </div>
+  );
+}
+
+function ResumoDoDia() {
+  const pode = usePode();
+  const hoje = new Date().toLocaleDateString('sv-SE');
+  const { data } = useQuery({
+    queryKey: ['rel-vendas', hoje, hoje, 'dia'],
+    queryFn: () => api<{ totais: { quantidade: number; faturamento: number; ticketMedio: number; lucroBruto: number; margemBruta: number | null } }>(`/relatorios/vendas?de=${hoje}&ate=${hoje}&agrupar=dia`),
+    enabled: pode('relatorio.ver'),
+    refetchInterval: 60_000,
+  });
+  if (!data) return null;
+  const t = data.totais;
+  return (
+    <div className="mb-6 grid gap-4 sm:grid-cols-4">
+      <Cartao><p className="text-sm text-stone-600">Vendido hoje</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatarReais(t.faturamento)}</p></Cartao>
+      <Cartao><p className="text-sm text-stone-600">Vendas hoje</p><p className="mt-1 text-2xl font-semibold tabular-nums">{t.quantidade}</p></Cartao>
+      <Cartao><p className="text-sm text-stone-600">Ticket médio</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatarReais(t.ticketMedio)}</p></Cartao>
+      <Cartao><p className="text-sm text-stone-600">Lucro bruto hoje</p><p className="mt-1 text-2xl font-semibold tabular-nums">{formatarReais(t.lucroBruto)}</p><p className="text-xs text-stone-500">Margem <Margem real={t.margemBruta} /></p></Cartao>
+    </div>
+  );
+}
+
+function Atalhos() {
+  const pode = usePode();
+  const itens = [
+    { para: '/pdv', rotulo: 'Nova venda', icone: ShoppingCart, ok: pode('venda.realizar') },
+    { para: '/caixa', rotulo: 'Caixa', icone: Wallet, ok: pode('caixa.operar') },
+    { para: '/entradas/nova', rotulo: 'Entrada de mercadoria', icone: PackagePlus, ok: pode('estoque.entrada') },
+    { para: '/relatorios', rotulo: 'Relatórios', icone: BarChart3, ok: pode('relatorio.ver') },
+  ].filter((i) => i.ok);
+  return (
+    <div className="grid max-w-3xl gap-3 sm:grid-cols-4">
+      {itens.map(({ para, rotulo, icone: Icone }) => (
+        <Link key={para} to={para} className="flex flex-col items-center gap-2 rounded-lg bg-white p-5 text-sm font-medium shadow-sm ring-1 ring-stone-200 hover:ring-marca-500">
+          <Icone className="size-6 text-marca-600" aria-hidden /> {rotulo}
+        </Link>
+      ))}
     </div>
   );
 }

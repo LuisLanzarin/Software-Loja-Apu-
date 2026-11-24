@@ -7,6 +7,9 @@ import { resolve } from 'node:path';
 import { AuditoriaModule } from './auditoria/auditoria.module.ts';
 import { AuthModule } from './auth/auth.module.ts';
 import { CadastrosModule } from './cadastros/cadastros.module.ts';
+import { BackupModule } from './backup/backup.module.ts';
+import { RelatoriosModule } from './relatorios/relatorios.module.ts';
+import { SaudeController } from './saude.controller.ts';
 import { CaixaModule } from './caixa/caixa.module.ts';
 import { ClientesModule } from './clientes/clientes.module.ts';
 import { VendasModule } from './vendas/vendas.module.ts';
@@ -44,7 +47,10 @@ const WEB_DIST = resolve(API_ROOT, '..', 'web', 'dist');
     ClientesModule,
     CaixaModule,
     VendasModule,
+    RelatoriosModule,
+    BackupModule,
   ],
+  controllers: [SaudeController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -26,6 +26,8 @@ export const PERMISSOES = {
   'caixa.ver_todos': [FINANCEIRO, GERENTE, ADMIN],
   'cliente.editar': [VENDEDOR, FINANCEIRO, GERENTE, ADMIN],
   'boleto.baixar': [FINANCEIRO, GERENTE, ADMIN],
+  'relatorio.ver': [FINANCEIRO, GERENTE, ADMIN],
+  'backup.gerenciar': [ADMIN],
   'venda.autorizar': [GERENTE, ADMIN],
 } as const satisfies Record<string, readonly Perfil[]>;
 

@@ -52,6 +52,9 @@ const ACOES: Record<string, string> = {
   'cliente.criado': 'Cadastrou cliente',
   'cliente.alterado': 'Alterou cliente',
   'boleto.baixado': 'Deu baixa em boleto',
+  'backup.manual': 'Fez backup manual',
+  'backup.configurado': 'Alterou a configuração de backup',
+  'backup.restaurado': 'Restaurou um backup',
 };
 
 export function Auditoria() {

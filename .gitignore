@@ -5,3 +5,4 @@ dist/
 apps/api/data/
 apps/api/src/generated/
 backups/
+logs/

@@ -23,6 +23,8 @@ export type Permissao =
   | 'caixa.ver_todos'
   | 'cliente.editar'
   | 'boleto.baixar'
+  | 'relatorio.ver'
+  | 'backup.gerenciar'
   | 'venda.autorizar';
 
 export interface Sessao {

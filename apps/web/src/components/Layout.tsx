@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardList, FileText, Home, KeyRound, LogOut, Package, Receipt, Settings, PackagePlus, ShoppingCart, Tags, Truck, Warehouse, UserCog, Users, Wallet, type LucideIcon } from 'lucide-react';
+import { BarChart3, ClipboardList, DatabaseBackup, FileText, Home, KeyRound, LogOut, Package, Receipt, Settings, PackagePlus, ShoppingCart, Tags, Truck, Warehouse, UserCog, Users, Wallet, type LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { NOMES_PERFIL } from '../lib/formato';
@@ -26,7 +26,7 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
       { para: '/estoque', rotulo: 'Estoque', icone: Warehouse },
       { para: '/entradas', rotulo: 'Entradas', icone: PackagePlus, permissao: 'estoque.entrada' },
       { para: '/fornecedores', rotulo: 'Fornecedores', icone: Truck, permissao: 'fornecedor.ver' },
-      { para: '/relatorios', rotulo: 'Relatórios', icone: BarChart3, emBreve: true },
+      { para: '/relatorios', rotulo: 'Relatórios', icone: BarChart3, permissao: 'relatorio.ver' },
     ],
   },
   {
@@ -36,6 +36,7 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
       { para: '/cadastros', rotulo: 'Categorias e unidades', icone: Tags, permissao: 'cadastros.editar' },
       { para: '/configuracoes', rotulo: 'Configurações', icone: Settings, permissao: 'configuracao.editar' },
       { para: '/auditoria', rotulo: 'Auditoria', icone: ClipboardList, permissao: 'auditoria.ver' },
+      { para: '/backup', rotulo: 'Backup', icone: DatabaseBackup, permissao: 'backup.gerenciar' },
     ],
   },
 ];

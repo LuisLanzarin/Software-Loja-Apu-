@@ -9,7 +9,10 @@ call npm run build || goto erro
 echo == Preparando o banco de dados ==
 call npm run db:migrate || goto erro
 echo.
-echo Instalacao concluida. Para abrir o sistema, execute iniciar.bat
+echo Instalacao concluida.
+echo  - Para o sistema iniciar sozinho com o Windows (recomendado):
+echo      clique com o botao direito em instalar-servico.bat e "Executar como administrador".
+echo  - Ou, para abrir manualmente: iniciar.bat
 pause
 exit /b 0
 :erro

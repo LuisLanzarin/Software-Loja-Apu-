@@ -78,6 +78,11 @@ model Configuracao {
 
   // Orçamento vale por X dias (o preço do orçamento é respeitado até lá).
   validadeOrcamentoDias      Int      @default(7)
+
+  // Backup automático diário
+  backupHora                 Int      @default(21)  // a partir desta hora
+  backupManterDias           Int      @default(30)
+  backupPastaExtra           String?                // ex.: pen drive ou pasta do Google Drive
   atualizadoEm               DateTime @updatedAt
 }
 

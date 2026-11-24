@@ -16,16 +16,33 @@ Convenções do banco: **dinheiro em centavos** e **quantidades em milésimos** 
 
 ## Instalação no Windows (PC principal)
 
-1. Instale o [Node.js 22 LTS](https://nodejs.org).
-2. Copie esta pasta para o PC (ex.: `C:\GestaoLoja`).
-3. Execute `instalar.bat`.
-4. Execute `iniciar.bat` e acesse `http://localhost:3000`.
-5. Na primeira vez, o sistema pede o nome da loja e cria o usuário administrador.
+1. Instale o [Node.js 22 LTS](https://nodejs.org) (versão "LTS", opções padrão).
+2. Copie esta pasta para o PC, por exemplo `C:\GestaoLoja`.
+3. Dê dois cliques em **`instalar.bat`** e espere terminar.
+4. Clique com o botão direito em **`instalar-servico.bat`** → **Executar como administrador**.
+   O sistema passa a iniciar sozinho quando o computador liga e libera a porta 3000 no Firewall.
+5. Abra `http://localhost:3000`. Na primeira vez, cadastre o nome da loja e o administrador.
 
-**Outros PCs:** a janela do `iniciar.bat` mostra o endereço (ex.: `http://192.168.0.10:3000`).
-Abra esse endereço no navegador dos outros computadores. Se não abrir, libere a porta 3000 no Firewall do Windows do PC principal.
+**Outros PCs da loja:** abra no navegador `http://IP-DO-PC-PRINCIPAL:3000`.
+O IP aparece no log em `logs\` (ou rode `ipconfig` no PC principal). Vale fixar esse IP no roteador.
 
-> Por enquanto, faça backup copiando `apps\api\data\` com o sistema fechado. O backup automático vem na etapa 5.
+**Sem o serviço:** dá para usar `iniciar.bat` (a janela precisa ficar aberta).
+**Remover o serviço:** `remover-servico.bat` como administrador.
+
+### Atualizar para uma nova versão
+
+1. Pare o serviço (`remover-servico.bat`) ou feche o `iniciar.bat`.
+2. Substitua os arquivos pela nova versão, **mantendo** `apps\api\data\`, `apps\api\.env` e `backups\`.
+3. Rode `instalar.bat` e depois `instalar-servico.bat`. As mudanças no banco são aplicadas sozinhas.
+
+### Backup
+
+- Automático todo dia a partir das 21h (configurável). Se o PC estava desligado, faz ao ligar.
+- Ficam em `backups\` e, se configurada, numa **pasta extra** (pen drive, Google Drive ou OneDrive):
+  configure em **Backup**, no menu do administrador.
+- Cada backup é verificado depois de criado. Os dos últimos 30 dias são mantidos, e os 7 mais recentes nunca são apagados.
+- **Restaurar:** menu Backup → Restaurar. Antes, o sistema guarda uma cópia do banco atual e depois reinicia sozinho.
+- Para restaurar um backup trazido de outro lugar, copie o arquivo `loja_....db` para a pasta `backups\` e ele aparece na lista.
 
 ## Desenvolvimento
 
@@ -64,6 +81,14 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 - Fechamento com **conferência cega**: o operador informa o que contou antes de ver o valor do sistema.
 - Comprovante não fiscal para impressora de bobina (80 mm) ou A4.
 
+## Relatórios
+
+- **Fechamento de vendas** por dia, semana ou mês: faturamento, descontos, custo, lucro bruto, margem, ticket médio,
+  formas de pagamento, vendedores e cancelamentos. O "resultado estimado" desconta os percentuais da formação de preço.
+- **Curva ABC** de produtos (A = itens até 80% do faturamento acumulado, B = até 95%, C = o resto) e resultado por categoria.
+- **Caixas**: diferenças de conferência por operador e forma de pagamento.
+- Tudo exporta para Excel (CSV). O custo usado é o custo médio **no momento da venda**.
+
 ## Perfis
 
 | Permissão | Vendedor | Financeiro | Gerente | Admin |
@@ -79,6 +104,8 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 | Ver vendas e caixas de todos | | ✅ | ✅ | ✅ |
 | Cadastrar clientes | ✅ | ✅ | ✅ | ✅ |
 | Dar baixa em boletos | | ✅ | ✅ | ✅ |
+| Relatórios | | ✅ | ✅ | ✅ |
+| Backup e restauração | | | | ✅ |
 | Autorizar desconto/cancelamento acima do limite | | | ✅ | ✅ |
 | Editar configurações | | | ✅ | ✅ |
 | Ver auditoria | | | ✅ | ✅ |
@@ -92,4 +119,4 @@ A matriz fica em `apps/api/src/common/permissoes.ts`.
 - [x] 2. Produtos, fornecedores e formação de preço
 - [x] 3. Entrada de mercadoria e controle de estoque
 - [x] 4. Vendas, orçamentos e caixa
-- [ ] 5. Relatórios de fechamento, backup automático e instalação como serviço do Windows
+- [x] 5. Relatórios de fechamento, backup automático e instalação como serviço do Windows
