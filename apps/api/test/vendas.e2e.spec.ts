@@ -238,3 +238,35 @@ describe('Proteção da senha do gerente', () => {
     expect(r.body.message).toMatch(/bloqueado/);
   });
 });
+
+describe('Taxa de serviço (opcional)', () => {
+  // Neste ponto o cimento custa R$ 45,00 (preço alterado no teste de orçamento).
+  const comTaxa = (extra: object = {}) =>
+    venda({ cobrarTaxaServico: true, itens: [{ produtoId: cimento, quantidade: 2000 }], pagamentos: [{ forma: 'DINHEIRO', valor: 20000 }], ...extra });
+
+  it('soma 10% sobre o consumo quando marcada', async () => {
+    const r = await post('/api/vendas', comTaxa());
+    expect(r.status).toBe(201);
+    expect(r.body).toMatchObject({ subtotal: 9000, taxaServico: 900, total: 9900, troco: 10100 });
+  });
+
+  it('é calculada depois do desconto', async () => {
+    const r = await post('/api/vendas', comTaxa({ descontoGeral: 300 }));
+    expect(r.body).toMatchObject({ taxaServico: 870, total: 8700 + 870 });
+  });
+
+  it('não é cobrada quando desmarcada', async () => {
+    const r = await post('/api/vendas', comTaxa({ cobrarTaxaServico: false }));
+    expect(r.body).toMatchObject({ taxaServico: 0, total: 9000 });
+  });
+
+  it('com o percentual zerado nas configurações, não cobra mesmo se pedida', async () => {
+    const cfg = (await get('/api/configuracao', admin)).body;
+    await t.http().put('/api/configuracao').set(XHR).set('Cookie', admin).send({
+      nomeLoja: cfg.nomeLoja, descontoMaxSemAutorizacao: cfg.descontoMaxSemAutorizacao,
+      cancelamentoMaxSemAutorizacao: cfg.cancelamentoMaxSemAutorizacao, sessaoInatividadeMin: cfg.sessaoInatividadeMin,
+      taxaServicoPct: 0, taxaServicoPadrao: false,
+    }).expect(200);
+    expect((await post('/api/vendas', comTaxa())).body).toMatchObject({ taxaServico: 0, total: 9000 });
+  });
+});

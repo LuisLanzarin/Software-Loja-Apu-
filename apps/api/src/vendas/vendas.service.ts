@@ -119,12 +119,15 @@ export class VendasService {
     const subtotal = linhas.reduce((a, l) => a + l.bruto, 0);
     const descontoItens = linhas.reduce((a, l) => a + l.desconto, 0);
     if (d.descontoGeral > subtotal - descontoItens) throw new BadRequestException('O desconto é maior que o valor da venda.');
-    const total = subtotal - descontoItens - d.descontoGeral;
-    if (total <= 0) throw new BadRequestException('O total da venda precisa ser maior que zero.');
+    const consumo = subtotal - descontoItens - d.descontoGeral;
+    if (consumo <= 0) throw new BadRequestException('O total da venda precisa ser maior que zero.');
+    // Taxa de serviço sobre o consumo já com desconto.
+    const taxaServico = d.cobrarTaxaServico && cfg.taxaServicoPct > 0 ? Math.round((consumo * cfg.taxaServicoPct) / 10000) : 0;
+    const total = consumo + taxaServico;
 
     const base = {
       clienteId: cliente?.id ?? null, vendedorId: u.id, subtotal, descontoItens, descontoGeral: d.descontoGeral,
-      total, observacoes: d.observacoes,
+      taxaServico, total, observacoes: d.observacoes,
     };
     const itensData = linhas.map((l) => ({
       produtoId: l.p.id, descricao: l.p.descricao, unidadeSigla: l.p.unidade.sigla, quantidade: l.quantidade,

@@ -30,6 +30,8 @@ export const vendaSchema = z.object({
     .min(1, 'Adicione pelo menos um produto')
     .max(300),
   descontoGeral: centavos.default(0),
+  /** Taxa de serviço opcional: o percentual vem da configuração, nunca da tela. */
+  cobrarTaxaServico: z.boolean().default(false),
   observacoes: textoOpcional(500),
   pagamentos: z.array(pagamentoSchema).max(10).default([]),
   autorizacao: autorizacaoSchema,

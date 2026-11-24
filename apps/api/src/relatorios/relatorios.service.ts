@@ -29,15 +29,16 @@ export class RelatoriosService {
     const vendas = await this.prisma.venda.findMany({
       where: { status: 'FINALIZADA', finalizadaEm: { gte: inicio, lte: fim } },
       select: {
-        id: true, finalizadaEm: true, total: true, subtotal: true, descontoItens: true, descontoGeral: true,
+        id: true, finalizadaEm: true, total: true, subtotal: true, descontoItens: true, descontoGeral: true, taxaServico: true,
         vendedor: { select: { id: true, nome: true } },
         itens: { select: { quantidade: true, custoUnitario: true } },
         pagamentos: { select: { forma: true, valor: true } },
       },
     });
 
-    type Linha = { quantidade: number; faturamento: number; descontos: number; custo: number };
-    const vazio = (): Linha => ({ quantidade: 0, faturamento: 0, descontos: 0, custo: 0 });
+    // faturamento = consumo (sem a taxa de serviço, que é da equipe); taxaServico vem à parte.
+    type Linha = { quantidade: number; faturamento: number; descontos: number; custo: number; taxaServico: number };
+    const vazio = (): Linha => ({ quantidade: 0, faturamento: 0, descontos: 0, custo: 0, taxaServico: 0 });
     const periodos = new Map(periodosEntre(inicio, fim, agrupar).map((d) => [chaveDia(d), { inicio: d, ...vazio() }]));
     const vendedores = new Map<number, Linha & { nome: string }>();
     const formas = new Map<FormaPagamento, number>();
@@ -46,7 +47,9 @@ export class RelatoriosService {
     for (const v of vendas) {
       const custo = v.itens.reduce((a, i) => a + custoItem(i), 0);
       const descontos = v.descontoItens + v.descontoGeral;
-      const somar = (l: Linha) => { l.quantidade++; l.faturamento += v.total; l.descontos += descontos; l.custo += custo; };
+      const somar = (l: Linha) => {
+        l.quantidade++; l.faturamento += v.total - v.taxaServico; l.descontos += descontos; l.custo += custo; l.taxaServico += v.taxaServico;
+      };
       const chave = chaveDia(inicioDoPeriodo(v.finalizadaEm!, agrupar));
       const p = periodos.get(chave) ?? { inicio: inicioDoPeriodo(v.finalizadaEm!, agrupar), ...vazio() };
       periodos.set(chave, p);
@@ -99,7 +102,7 @@ export class RelatoriosService {
       },
       select: {
         quantidade: true, total: true, custoUnitario: true,
-        venda: { select: { total: true, subtotal: true, descontoItens: true } },
+        venda: { select: { total: true, subtotal: true, descontoItens: true, taxaServico: true } },
         produto: { select: { id: true, codigo: true, descricao: true, unidade: { select: { sigla: true } }, categoria: { select: { id: true, nome: true } } } },
       },
     });
@@ -110,7 +113,8 @@ export class RelatoriosService {
     for (const i of itens) {
       // Rateia o desconto dado na venda inteira entre os itens, para os totais baterem com o caixa.
       const liquidoItens = i.venda.subtotal - i.venda.descontoItens;
-      const faturamento = liquidoItens > 0 ? Math.round((i.total * i.venda.total) / liquidoItens) : 0;
+      const consumo = i.venda.total - i.venda.taxaServico;
+      const faturamento = liquidoItens > 0 ? Math.round((i.total * consumo) / liquidoItens) : 0;
       const custo = custoItem(i);
       const p = porProduto.get(i.produto.id) ?? {
         codigo: i.produto.codigo, descricao: i.produto.descricao, unidade: i.produto.unidade.sigla,

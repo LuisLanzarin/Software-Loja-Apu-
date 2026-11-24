@@ -79,6 +79,11 @@ model Configuracao {
   // Orçamento vale por X dias (o preço do orçamento é respeitado até lá).
   validadeOrcamentoDias      Int      @default(7)
 
+  // Taxa de serviço (opcional em cada venda). 0 = não usa. Pontos-base: 1000 = 10%.
+  taxaServicoPct             Int      @default(1000)
+  // Se a opção já vem marcada no caixa.
+  taxaServicoPadrao          Boolean  @default(true)
+
   // Backup automático diário
   backupHora                 Int      @default(21)  // a partir desta hora
   backupManterDias           Int      @default(30)
@@ -433,6 +438,9 @@ model Venda {
   subtotal           Int         // soma de quantidade × preço, sem desconto
   descontoItens      Int         @default(0)
   descontoGeral      Int         @default(0)
+  // Taxa de serviço cobrada (centavos). Entra no total pago, mas NÃO é faturamento:
+  // costuma ser repassada à equipe, por isso os relatórios a mostram separada.
+  taxaServico        Int         @default(0)
   total              Int
   troco              Int         @default(0)
   validoAte          DateTime?   // orçamentos

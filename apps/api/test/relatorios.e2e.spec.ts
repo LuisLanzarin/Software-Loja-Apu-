@@ -105,6 +105,18 @@ describe('Relatório de caixas', () => {
   });
 });
 
+describe('Taxa de serviço nos relatórios', () => {
+  it('fica fora do faturamento e do lucro, mas aparece separada', async () => {
+    // 1 A = R$ 20,00 de consumo + 10% = R$ 22,00 pagos
+    const v = await vender([{ produtoId: p1, quantidade: 1000 }], { cobrarTaxaServico: true, pagamentos: [{ forma: 'PIX', valor: 2200 }] }, vendedor);
+    expect(v.body.total).toBe(2200);
+    const r = (await get(`/api/relatorios/vendas?de=${hoje}&ate=${hoje}`)).body;
+    expect(r.totais).toMatchObject({ quantidade: 3, faturamento: 28000 + 2000, taxaServico: 200, lucroBruto: 30000 - 17100 });
+    const abc = (await get(`/api/relatorios/produtos?de=${hoje}&ate=${hoje}`)).body;
+    expect(abc.totalFaturamento).toBe(30000);
+  });
+});
+
 describe('Backup', () => {
   let nome: string;
 

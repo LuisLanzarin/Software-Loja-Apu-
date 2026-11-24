@@ -1,6 +1,6 @@
-# Gestão da Loja
+# King Pub e Restaurante — Gestão
 
-Sistema local de controle de vendas, estoque e caixa para uma loja de materiais de construção.
+Sistema local de controle de vendas, estoque e caixa do King Pub e Restaurante.
 Roda em um computador da loja e é acessado pelo navegador (até ~4 PCs na rede local).
 
 ## Stack
@@ -80,6 +80,9 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 - Boleto exige cliente com CPF/CNPJ e gera as parcelas a receber. O sistema não emite o boleto no banco.
 - Fechamento com **conferência cega**: o operador informa o que contou antes de ver o valor do sistema.
 - Comprovante não fiscal para impressora de bobina (80 mm) ou A4.
+- **Taxa de serviço opcional**: percentual configurável (0 desliga), marcada ou não por padrão, e o caixa decide em cada venda.
+  Calculada sobre o consumo já com desconto. Nos relatórios fica **separada do faturamento** (não infla lucro nem margem),
+  mas entra no fechamento do caixa.
 
 ## Relatórios
 

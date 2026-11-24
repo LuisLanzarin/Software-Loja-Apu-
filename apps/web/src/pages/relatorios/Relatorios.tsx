@@ -11,7 +11,7 @@ import { formatarDataHora, formatarPct, formatarQtd, formatarReais } from '../..
 import { NOMES_FORMA, type FormaPagamento } from '../../lib/tipos';
 
 type Agrupar = 'dia' | 'semana' | 'mes';
-interface Linha { quantidade: number; faturamento: number; descontos: number; custo: number; lucroBruto: number; margemBruta: number | null; ticketMedio: number }
+interface Linha { quantidade: number; faturamento: number; descontos: number; custo: number; taxaServico: number; lucroBruto: number; margemBruta: number | null; ticketMedio: number }
 interface RelVendas {
   totais: Linha & { resultadoEstimado: number; percentuaisUsados: number; canceladas: number; valorCancelado: number };
   periodos: (Linha & { chave: string; rotulo: string })[];
@@ -110,16 +110,20 @@ function AbaVendas({ de, ate, agrupar }: { de: string; ate: string; agrupar: Agr
   const totalFormas = r.formasPagamento.reduce((a, f) => a + f.valor, 0);
 
   function csv() {
-    exportarCSV(`fechamento_${de}_a_${ate}`, ['Período', 'Vendas', 'Faturamento (R$)', 'Descontos (R$)', 'Custo (R$)', 'Lucro bruto (R$)', 'Margem bruta (%)', 'Ticket médio (R$)'], [
-      ...r!.periodos.map((p) => [p.rotulo, p.quantidade, reais(p.faturamento), reais(p.descontos), reais(p.custo), reais(p.lucroBruto), pct(p.margemBruta), reais(p.ticketMedio)]),
-      ['TOTAL', t.quantidade, reais(t.faturamento), reais(t.descontos), reais(t.custo), reais(t.lucroBruto), pct(t.margemBruta), reais(t.ticketMedio)],
+    exportarCSV(`fechamento_${de}_a_${ate}`, ['Período', 'Vendas', 'Faturamento (R$)', 'Descontos (R$)', 'Taxa de serviço (R$)', 'Custo (R$)', 'Lucro bruto (R$)', 'Margem bruta (%)', 'Ticket médio (R$)'], [
+      ...r!.periodos.map((p) => [p.rotulo, p.quantidade, reais(p.faturamento), reais(p.descontos), reais(p.taxaServico), reais(p.custo), reais(p.lucroBruto), pct(p.margemBruta), reais(p.ticketMedio)]),
+      ['TOTAL', t.quantidade, reais(t.faturamento), reais(t.descontos), reais(t.taxaServico), reais(t.custo), reais(t.lucroBruto), pct(t.margemBruta), reais(t.ticketMedio)],
     ]);
   }
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Indicador titulo="Faturamento" valor={formatarReais(t.faturamento)} detalhe={t.descontos ? `${formatarReais(t.descontos)} em descontos` : undefined} />
+        <Indicador
+          titulo="Faturamento"
+          valor={formatarReais(t.faturamento)}
+          detalhe={[t.descontos ? `${formatarReais(t.descontos)} em descontos` : '', t.taxaServico ? `+ ${formatarReais(t.taxaServico)} de taxa de serviço (à parte)` : ''].filter(Boolean).join(' · ') || undefined}
+        />
         <Indicador titulo="Vendas" valor={t.quantidade.toLocaleString('pt-BR')} detalhe={`Ticket médio ${formatarReais(t.ticketMedio)}`} />
         <Indicador titulo="Lucro bruto" valor={formatarReais(t.lucroBruto)} detalhe={<>Margem bruta <Margem real={t.margemBruta} /></>} />
         <Indicador titulo="Resultado estimado" valor={formatarReais(t.resultadoEstimado)} detalhe={`Lucro bruto − ${formatarPct(t.percentuaisUsados)} de impostos, despesas e comissão`} />
@@ -137,13 +141,14 @@ function AbaVendas({ de, ate, agrupar }: { de: string; ate: string; agrupar: Agr
       </Cartao>
 
       <Cartao titulo="Fechamento" className="overflow-hidden [&>div:last-child]:p-0" acoes={<Botao variante="secundario" onClick={csv}><Download className="size-4" aria-hidden /> Excel (CSV)</Botao>}>
-        <Tabela colunas={[{ titulo: 'Período' }, { titulo: 'Vendas', direita: true }, { titulo: 'Faturamento', direita: true }, { titulo: 'Descontos', direita: true }, { titulo: 'Custo', direita: true }, { titulo: 'Lucro bruto', direita: true }, { titulo: 'Margem', direita: true }]}>
+        <Tabela colunas={[{ titulo: 'Período' }, { titulo: 'Vendas', direita: true }, { titulo: 'Faturamento', direita: true }, { titulo: 'Descontos', direita: true }, { titulo: 'Taxa serviço', direita: true }, { titulo: 'Custo', direita: true }, { titulo: 'Lucro bruto', direita: true }, { titulo: 'Margem', direita: true }]}>
           {r.periodos.map((p) => (
             <tr key={p.chave} className={p.quantidade ? '' : 'text-stone-400'}>
               <td className="px-4 py-2">{p.rotulo}</td>
               <td className="px-4 py-2 text-right tabular-nums">{p.quantidade}</td>
               <td className="px-4 py-2 text-right font-medium tabular-nums">{formatarReais(p.faturamento)}</td>
               <td className="px-4 py-2 text-right tabular-nums">{formatarReais(p.descontos)}</td>
+              <td className="px-4 py-2 text-right tabular-nums">{formatarReais(p.taxaServico)}</td>
               <td className="px-4 py-2 text-right tabular-nums">{formatarReais(p.custo)}</td>
               <td className="px-4 py-2 text-right tabular-nums">{formatarReais(p.lucroBruto)}</td>
               <td className="px-4 py-2 text-right">{p.quantidade ? <Margem real={p.margemBruta} /> : '—'}</td>
@@ -154,6 +159,7 @@ function AbaVendas({ de, ate, agrupar }: { de: string; ate: string; agrupar: Agr
             <td className="px-4 py-2.5 text-right tabular-nums">{t.quantidade}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{formatarReais(t.faturamento)}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{formatarReais(t.descontos)}</td>
+            <td className="px-4 py-2.5 text-right tabular-nums">{formatarReais(t.taxaServico)}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{formatarReais(t.custo)}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{formatarReais(t.lucroBruto)}</td>
             <td className="px-4 py-2.5 text-right"><Margem real={t.margemBruta} /></td>
@@ -162,7 +168,7 @@ function AbaVendas({ de, ate, agrupar }: { de: string; ate: string; agrupar: Agr
       </Cartao>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Cartao titulo="Formas de pagamento">
+        <Cartao titulo="Recebido por forma de pagamento">
           {r.formasPagamento.length === 0 ? <Vazio>Sem pagamentos.</Vazio> : (
             <ul className="space-y-3 text-sm">
               {r.formasPagamento.map((f) => (

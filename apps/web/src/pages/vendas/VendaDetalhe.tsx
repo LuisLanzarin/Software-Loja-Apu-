@@ -102,6 +102,7 @@ export function VendaDetalhe() {
               <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatarReais(v.subtotal)}</dd></div>
               {v.descontoItens > 0 && <div className="flex justify-between"><dt>Desconto nos itens</dt><dd>− {formatarReais(v.descontoItens)}</dd></div>}
               {v.descontoGeral > 0 && <div className="flex justify-between"><dt>Desconto na venda</dt><dd>− {formatarReais(v.descontoGeral)}</dd></div>}
+              {v.taxaServico > 0 && <div className="flex justify-between"><dt>Taxa de serviço</dt><dd>+ {formatarReais(v.taxaServico)}</dd></div>}
               <div className="flex justify-between border-t border-stone-200 pt-2 text-base font-semibold"><dt>Total</dt><dd>{formatarReais(v.total)}</dd></div>
               {v.pagamentos.map((p) => (
                 <div key={p.id} className="flex justify-between text-stone-600"><dt>{NOMES_FORMA[p.forma]}{p.parcelas > 1 ? ` (${p.parcelas}x)` : ''}</dt><dd>{formatarReais(p.valor)}</dd></div>

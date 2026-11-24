@@ -45,6 +45,7 @@ export function Recibo() {
       <hr className="my-2 border-dashed border-black" />
       <p className="flex justify-between"><span>Subtotal</span><span>{formatarReais(v.subtotal)}</span></p>
       {v.descontoItens + v.descontoGeral > 0 && <p className="flex justify-between"><span>Descontos</span><span>-{formatarReais(v.descontoItens + v.descontoGeral)}</span></p>}
+      {v.taxaServico > 0 && <p className="flex justify-between"><span>Taxa de serviço (opcional)</span><span>{formatarReais(v.taxaServico)}</span></p>}
       <p className="flex justify-between text-sm font-bold"><span>TOTAL</span><span>{formatarReais(v.total)}</span></p>
       {!orcamento && (
         <>
@@ -60,7 +61,7 @@ export function Recibo() {
       )}
       <hr className="my-2 border-dashed border-black" />
       {orcamento && v.validoAte && <p className="text-center font-bold">Válido até {new Date(v.validoAte).toLocaleDateString('pt-BR')}</p>}
-      <p className="text-center">Vendedor: {v.vendedor.nome}</p>
+      <p className="text-center">Atendido por: {v.vendedor.nome}</p>
       <p className="mt-2 text-center">Documento sem valor fiscal</p>
     </div>
   );

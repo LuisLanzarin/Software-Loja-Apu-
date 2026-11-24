@@ -17,6 +17,9 @@ const schema = z.object({
   cancelamentoMaxSemAutorizacao: z.number().int().min(0).max(100_000_000),
   sessaoInatividadeMin: z.number().int().min(5, 'Mínimo de 5 minutos').max(720, 'Máximo de 12 horas'),
   validadeOrcamentoDias: z.number().int().min(1).max(90).optional(),
+  /** 0 = não usa taxa de serviço. Até 30%. */
+  taxaServicoPct: z.number().int().min(0).max(3000, 'Taxa de serviço de no máximo 30%').optional(),
+  taxaServicoPadrao: z.boolean().optional(),
 });
 
 const precificacaoSchema = z
@@ -79,7 +82,7 @@ export class ConfiguracaoController {
       entidade: 'Configuracao',
       entidadeId: 1,
       detalhes: {
-        antes: { nomeLoja: antes.nomeLoja, descontoMaxSemAutorizacao: antes.descontoMaxSemAutorizacao, cancelamentoMaxSemAutorizacao: antes.cancelamentoMaxSemAutorizacao, sessaoInatividadeMin: antes.sessaoInatividadeMin },
+        antes: { nomeLoja: antes.nomeLoja, taxaServicoPct: antes.taxaServicoPct, descontoMaxSemAutorizacao: antes.descontoMaxSemAutorizacao, cancelamentoMaxSemAutorizacao: antes.cancelamentoMaxSemAutorizacao, sessaoInatividadeMin: antes.sessaoInatividadeMin },
         depois: body,
       },
       ip: req.ip,

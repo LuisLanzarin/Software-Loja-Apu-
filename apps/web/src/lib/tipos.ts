@@ -114,6 +114,7 @@ export interface Venda {
   subtotal: number;
   descontoItens: number;
   descontoGeral: number;
+  taxaServico: number;
   total: number;
   troco: number;
   validoAte: string | null;

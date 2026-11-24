@@ -30,11 +30,15 @@ export function PDV() {
   const [params, setParams] = useSearchParams();
   const busca = useRef<BuscaProdutoRef>(null);
   const { data: caixa, isLoading: carregandoCaixa } = useCaixaAtual();
-  const { data: cfg } = useQuery({ queryKey: ['configuracao'], queryFn: () => api<{ descontoMaxSemAutorizacao: number }>('/configuracao') });
+  const { data: cfg } = useQuery({
+    queryKey: ['configuracao'],
+    queryFn: () => api<{ descontoMaxSemAutorizacao: number; taxaServicoPct: number; taxaServicoPadrao: boolean }>('/configuracao'),
+  });
 
   const [itens, setItens] = useState<Item[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [descontoGeral, setDescontoGeral] = useState('');
+  const [cobrarTaxa, setCobrarTaxa] = useState<boolean | null>(null); // null = segue o padrão da configuração
   const [orcamento, setOrcamento] = useState<Venda | null>(null);
   const [pagando, setPagando] = useState(0); // >0 = janela aberta (muda a "key" para limpar)
   const [enviando, setEnviando] = useState(false);
@@ -85,7 +89,11 @@ export function PDV() {
   const subtotal = linhas.reduce((a, l) => a + l.bruto, 0);
   const descItens = linhas.reduce((a, l) => a + l.desc, 0);
   const descGeral = Math.min(lerDecimal(descontoGeral || '0', 2) ?? 0, subtotal - descItens);
-  const total = subtotal - descItens - descGeral;
+  const consumo = subtotal - descItens - descGeral;
+  const usaTaxa = !!cfg && cfg.taxaServicoPct > 0;
+  const taxaMarcada = usaTaxa && (cobrarTaxa ?? cfg!.taxaServicoPadrao);
+  const taxa = taxaMarcada ? Math.round((consumo * cfg!.taxaServicoPct) / 10000) : 0; // igual ao servidor
+  const total = consumo + taxa;
   const pctDesconto = subtotal ? Math.round(((descItens + descGeral) * 10000) / subtotal) : 0;
   const acimaLimite = cfg && pctDesconto > cfg.descontoMaxSemAutorizacao;
   const algumSemEstoque = linhas.some((l) => l.semEstoque);
@@ -96,12 +104,14 @@ export function PDV() {
     orcamentoId: orcamento?.id ?? null,
     itens: itens.map((i, n) => ({ produtoId: i.produto.id, quantidade: linhas[n].q, desconto: linhas[n].desc })),
     descontoGeral: descGeral,
+    cobrarTaxaServico: taxaMarcada,
   });
 
   function limpar() {
     setItens([]);
     setCliente(null);
     setDescontoGeral('');
+    setCobrarTaxa(null);
     setOrcamento(null);
     setErro('');
     if (idOrcamento) setParams({});
@@ -263,6 +273,17 @@ export function PDV() {
                   Desconto total: {formatarPct(pctDesconto)}{acimaLimite && cfg ? ` — acima de ${formatarPct(cfg.descontoMaxSemAutorizacao)}, pedirá o gerente` : ''}
                 </p>
               )}
+              {usaTaxa && (
+                <div className="flex items-center justify-between">
+                  <dt>
+                    <label className="flex cursor-pointer items-center gap-2 text-stone-600">
+                      <input type="checkbox" checked={taxaMarcada} onChange={(e) => setCobrarTaxa(e.target.checked)} className="size-4 rounded accent-marca-600" />
+                      Taxa de serviço ({formatarPct(cfg!.taxaServicoPct).replace(',00', '')})
+                    </label>
+                  </dt>
+                  <dd className={`tabular-nums ${taxaMarcada ? '' : 'text-stone-400'}`}>{formatarReais(taxa)}</dd>
+                </div>
+              )}
               <div className="flex items-baseline justify-between border-t border-stone-200 pt-3">
                 <dt className="text-base font-medium">Total</dt>
                 <dd className="text-3xl font-semibold tabular-nums">{formatarReais(total)}</dd>
@@ -271,7 +292,7 @@ export function PDV() {
             {algumSemEstoque && <div className="mt-3"><Alerta tipo="info">Há itens sem estoque suficiente: a venda vai pedir a senha do gerente.</Alerta></div>}
             {erro && <div className="mt-3"><Alerta>{erro}</Alerta></div>}
             <div className="mt-4 space-y-2">
-              <Botao className="w-full py-3 text-base" onClick={finalizar} disabled={!itens.length || quantidadeInvalida || !caixa || total <= 0}>
+              <Botao className="w-full py-3 text-base" onClick={finalizar} disabled={!itens.length || quantidadeInvalida || !caixa || consumo <= 0}>
                 Finalizar venda (F2)
               </Botao>
               <div className="flex gap-2">
