@@ -20,6 +20,12 @@ export const PERMISSOES = {
   'estoque.entrada': [FINANCEIRO, GERENTE, ADMIN],
   'estoque.ajustar': [GERENTE, ADMIN],
   'estoque.cancelar_entrada': [GERENTE, ADMIN],
+  'venda.realizar': [VENDEDOR, GERENTE, ADMIN],
+  'venda.ver_todas': [FINANCEIRO, GERENTE, ADMIN],
+  'caixa.operar': [VENDEDOR, GERENTE, ADMIN],
+  'caixa.ver_todos': [FINANCEIRO, GERENTE, ADMIN],
+  'cliente.editar': [VENDEDOR, FINANCEIRO, GERENTE, ADMIN],
+  'boleto.baixar': [FINANCEIRO, GERENTE, ADMIN],
   'venda.autorizar': [GERENTE, ADMIN],
 } as const satisfies Record<string, readonly Perfil[]>;
 

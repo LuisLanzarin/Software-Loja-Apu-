@@ -1,4 +1,4 @@
-import { ClipboardList, Home, KeyRound, LogOut, Package, Receipt, Settings, PackagePlus, ShoppingCart, Tags, Truck, Warehouse, Users, Wallet, type LucideIcon } from 'lucide-react';
+import { BarChart3, ClipboardList, FileText, Home, KeyRound, LogOut, Package, Receipt, Settings, PackagePlus, ShoppingCart, Tags, Truck, Warehouse, UserCog, Users, Wallet, type LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { NOMES_PERFIL } from '../lib/formato';
@@ -17,19 +17,22 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
   {
     grupo: 'Operação',
     itens: [
-      { para: '/vendas', rotulo: 'Vendas', icone: ShoppingCart, emBreve: true },
-      { para: '/caixa', rotulo: 'Caixa', icone: Wallet, emBreve: true },
+      { para: '/pdv', rotulo: 'Vender', icone: ShoppingCart, permissao: 'venda.realizar' },
+      { para: '/vendas', rotulo: 'Vendas e orçamentos', icone: Receipt },
+      { para: '/caixa', rotulo: 'Caixa', icone: Wallet },
+      { para: '/clientes', rotulo: 'Clientes', icone: Users },
+      { para: '/boletos', rotulo: 'Boletos a receber', icone: FileText, permissao: 'boleto.baixar' },
       { para: '/produtos', rotulo: 'Produtos', icone: Package },
       { para: '/estoque', rotulo: 'Estoque', icone: Warehouse },
       { para: '/entradas', rotulo: 'Entradas', icone: PackagePlus, permissao: 'estoque.entrada' },
       { para: '/fornecedores', rotulo: 'Fornecedores', icone: Truck, permissao: 'fornecedor.ver' },
-      { para: '/relatorios', rotulo: 'Relatórios', icone: Receipt, emBreve: true },
+      { para: '/relatorios', rotulo: 'Relatórios', icone: BarChart3, emBreve: true },
     ],
   },
   {
     grupo: 'Administração',
     itens: [
-      { para: '/usuarios', rotulo: 'Usuários', icone: Users, permissao: 'usuarios.gerenciar' },
+      { para: '/usuarios', rotulo: 'Usuários', icone: UserCog, permissao: 'usuarios.gerenciar' },
       { para: '/cadastros', rotulo: 'Categorias e unidades', icone: Tags, permissao: 'cadastros.editar' },
       { para: '/configuracoes', rotulo: 'Configurações', icone: Settings, permissao: 'configuracao.editar' },
       { para: '/auditoria', rotulo: 'Auditoria', icone: ClipboardList, permissao: 'auditoria.ver' },

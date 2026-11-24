@@ -25,6 +25,14 @@ import { Entradas } from './pages/estoque/Entradas';
 import { Estoque } from './pages/estoque/Estoque';
 import { EstoqueProduto } from './pages/estoque/EstoqueProduto';
 import { Inventario } from './pages/estoque/Inventario';
+import { Boletos } from './pages/Boletos';
+import { Clientes } from './pages/Clientes';
+import { Caixa } from './pages/caixa/Caixa';
+import { CaixaSessao } from './pages/caixa/CaixaSessao';
+import { PDV } from './pages/vendas/PDV';
+import { Recibo } from './pages/vendas/Recibo';
+import { VendaDetalhe } from './pages/vendas/VendaDetalhe';
+import { Vendas } from './pages/vendas/Vendas';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,7 +70,15 @@ function App() {
 
   return (
     <Routes>
+      <Route path="vendas/:id/imprimir" element={<Recibo />} />
       <Route element={<Layout />}>
+        <Route path="pdv" element={<SoCom permissao="venda.realizar"><PDV /></SoCom>} />
+        <Route path="vendas" element={<Vendas />} />
+        <Route path="vendas/:id" element={<VendaDetalhe />} />
+        <Route path="caixa" element={<Caixa />} />
+        <Route path="caixa/:id" element={<CaixaSessao />} />
+        <Route path="clientes" element={<Clientes />} />
+        <Route path="boletos" element={<SoCom permissao="boleto.baixar"><Boletos /></SoCom>} />
         <Route index element={<Inicio />} />
         <Route path="minha-senha" element={<MinhaSenha />} />
         <Route path="produtos" element={<Produtos />} />

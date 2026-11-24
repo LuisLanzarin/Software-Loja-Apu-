@@ -11,6 +11,7 @@ interface Configuracao {
   descontoMaxSemAutorizacao: number; // pontos-base
   cancelamentoMaxSemAutorizacao: number; // centavos
   sessaoInatividadeMin: number;
+  validadeOrcamentoDias: number;
   impostosPct?: number;
   despesasFixasPct?: number;
   comissaoPct?: number;
@@ -52,6 +53,7 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
           descontoMaxSemAutorizacao: desconto,
           cancelamentoMaxSemAutorizacao: cancelamento,
           sessaoInatividadeMin: inatividade,
+          validadeOrcamentoDias: Number.parseInt(f.validade, 10),
         },
       });
       await qc.invalidateQueries();
@@ -93,6 +95,11 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
               ajuda="Vendas acima deste valor só o gerente cancela. Ex.: 100,00"
             />
           </div>
+        </Cartao>
+
+        <Cartao titulo="Orçamentos">
+          <Campo rotulo="Validade do orçamento (dias)" name="validade" type="number" min={1} max={90} required defaultValue={inicial.validadeOrcamentoDias} className="max-w-xs"
+            ajuda="Dentro da validade, o orçamento vira venda com os preços prometidos." />
         </Cartao>
 
         <Cartao titulo="Segurança">

@@ -76,3 +76,63 @@ export interface Resumo {
   semEstoque: number;
   valorEstoque?: number;
 }
+
+export interface Cliente {
+  id: number;
+  nome: string;
+  documento: string | null;
+  telefone: string | null;
+  email: string | null;
+  cep: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  observacoes: string | null;
+  ativo: boolean;
+}
+
+export type FormaPagamento = 'DINHEIRO' | 'PIX' | 'DEBITO' | 'CREDITO' | 'BOLETO';
+export const NOMES_FORMA: Record<FormaPagamento, string> = {
+  DINHEIRO: 'Dinheiro',
+  PIX: 'PIX',
+  DEBITO: 'Débito',
+  CREDITO: 'Crédito',
+  BOLETO: 'Boleto',
+};
+
+export type StatusVenda = 'ORCAMENTO' | 'CONVERTIDO' | 'FINALIZADA' | 'CANCELADA';
+
+export interface Venda {
+  id: number;
+  status: StatusVenda;
+  cliente: Cliente | null;
+  clienteId: number | null;
+  vendedor: { id: number; nome: string };
+  subtotal: number;
+  descontoItens: number;
+  descontoGeral: number;
+  total: number;
+  troco: number;
+  validoAte: string | null;
+  observacoes: string | null;
+  motivosAutorizacao: string | null;
+  autorizadoPor: { nome: string } | null;
+  canceladaPor: { nome: string } | null;
+  motivoCancelamento: string | null;
+  canceladaEm: string | null;
+  criadoEm: string;
+  finalizadaEm: string | null;
+  orcamentoOrigemId: number | null;
+  vendaGerada: { id: number } | null;
+  itens: { id: number; produtoId: number; descricao: string; unidadeSigla: string; quantidade: number; precoUnitario: number; desconto: number; total: number }[];
+  pagamentos: { id: number; forma: FormaPagamento; valor: number; parcelas: number }[];
+  boletos: { id: number; parcela: number; totalParcelas: number; valor: number; vencimento: string; status: 'ABERTO' | 'PAGO' | 'CANCELADO' }[];
+}
+
+export interface MotivoAutorizacao {
+  tipo: 'DESCONTO' | 'SEM_ESTOQUE' | 'CANCELAMENTO';
+  detalhe: string;
+}

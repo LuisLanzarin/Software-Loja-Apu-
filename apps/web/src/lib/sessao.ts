@@ -17,6 +17,12 @@ export type Permissao =
   | 'estoque.entrada'
   | 'estoque.ajustar'
   | 'estoque.cancelar_entrada'
+  | 'venda.realizar'
+  | 'venda.ver_todas'
+  | 'caixa.operar'
+  | 'caixa.ver_todos'
+  | 'cliente.editar'
+  | 'boleto.baixar'
   | 'venda.autorizar';
 
 export interface Sessao {

@@ -53,6 +53,17 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 - Notas em unidade de compra (CX, RL…) são convertidas para a unidade de venda pelo fator do cadastro.
 - Cancelar uma entrada desfaz o saldo e o custo, e só é permitido se o material ainda estiver em estoque.
 
+## Vendas e caixa
+
+- O preço vem sempre do cadastro (ou do orçamento, dentro da validade); a tela não consegue mandar outro preço.
+- **Pedem a senha do gerente:** desconto acima do limite, venda sem estoque e cancelamento acima do valor configurado.
+  Gerente/Admin vendendo não precisam digitar a própria senha. A autorização fica registrada na venda e na auditoria,
+  e senha errada conta para o bloqueio do gerente.
+- Pagamento misto (dinheiro, PIX, débito, crédito parcelado, boleto). Troco só no dinheiro.
+- Boleto exige cliente com CPF/CNPJ e gera as parcelas a receber. O sistema não emite o boleto no banco.
+- Fechamento com **conferência cega**: o operador informa o que contou antes de ver o valor do sistema.
+- Comprovante não fiscal para impressora de bobina (80 mm) ou A4.
+
 ## Perfis
 
 | Permissão | Vendedor | Financeiro | Gerente | Admin |
@@ -64,6 +75,10 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 | Consultar saldo e movimentações de estoque | ✅ | ✅ | ✅ | ✅ |
 | Lançar entrada de mercadoria | | ✅ | ✅ | ✅ |
 | Ajustes, perdas, inventário e cancelar entrada | | | ✅ | ✅ |
+| Vender, fazer orçamento e operar o próprio caixa | ✅ | | ✅ | ✅ |
+| Ver vendas e caixas de todos | | ✅ | ✅ | ✅ |
+| Cadastrar clientes | ✅ | ✅ | ✅ | ✅ |
+| Dar baixa em boletos | | ✅ | ✅ | ✅ |
 | Autorizar desconto/cancelamento acima do limite | | | ✅ | ✅ |
 | Editar configurações | | | ✅ | ✅ |
 | Ver auditoria | | | ✅ | ✅ |
@@ -76,5 +91,5 @@ A matriz fica em `apps/api/src/common/permissoes.ts`.
 - [x] 1. Login, usuários, perfis, configurações e auditoria
 - [x] 2. Produtos, fornecedores e formação de preço
 - [x] 3. Entrada de mercadoria e controle de estoque
-- [ ] 4. Vendas, orçamentos e caixa
+- [x] 4. Vendas, orçamentos e caixa
 - [ ] 5. Relatórios de fechamento, backup automático e instalação como serviço do Windows

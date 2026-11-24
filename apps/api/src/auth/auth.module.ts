@@ -9,6 +9,6 @@ import { SessaoService } from './sessao.service.ts';
 @Module({
   controllers: [AuthController],
   providers: [AuthService, SessaoService, { provide: APP_GUARD, useClass: AuthGuard }],
-  exports: [SessaoService],
+  exports: [SessaoService, AuthService],
 })
 export class AuthModule {}

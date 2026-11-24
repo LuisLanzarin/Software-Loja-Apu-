@@ -41,6 +41,17 @@ const ACOES: Record<string, string> = {
   'entrada.cancelada': 'Cancelou entrada de mercadoria',
   'estoque.ajuste': 'Ajustou estoque',
   'estoque.inventario': 'Gravou inventário',
+  'venda.finalizada': 'Finalizou venda',
+  'venda.cancelada': 'Cancelou venda',
+  'orcamento.criado': 'Salvou orçamento',
+  'autorizacao.falha': 'Senha de gerente errada na autorização',
+  'caixa.aberto': 'Abriu o caixa',
+  'caixa.fechado': 'Fechou o caixa',
+  'caixa.sangria': 'Fez sangria',
+  'caixa.suprimento': 'Fez suprimento',
+  'cliente.criado': 'Cadastrou cliente',
+  'cliente.alterado': 'Alterou cliente',
+  'boleto.baixado': 'Deu baixa em boleto',
 };
 
 export function Auditoria() {
@@ -75,6 +86,10 @@ export function Auditoria() {
                   <td className="px-5 py-2.5">{r.usuario?.nome ?? <span className="text-stone-400">—</span>}</td>
                   <td className="px-5 py-2.5">
                     {ACOES[r.acao] ?? r.acao}
+                    {r.acao === 'venda.finalizada' && r.detalhes && JSON.parse(r.detalhes).autorizadoPor && (
+                      <span className="text-stone-500"> (autorizado por {JSON.parse(r.detalhes).autorizadoPor})</span>
+                    )}
+                    {r.entidade === 'Venda' && r.entidadeId && <span className="text-stone-500"> nº {r.entidadeId}</span>}
                     {r.acao === 'login.falha' && !r.usuario && r.detalhes && (
                       <span className="text-stone-500"> (login: {JSON.parse(r.detalhes).login})</span>
                     )}

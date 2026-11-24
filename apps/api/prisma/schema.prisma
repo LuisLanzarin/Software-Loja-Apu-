@@ -38,6 +38,12 @@ model Usuario {
   movimentacoes MovimentacaoEstoque[]
   entradas  Entrada[] @relation("EntradaCriadaPor")
   entradasCanceladas Entrada[] @relation("EntradaCanceladaPor")
+  sessoesCaixa CaixaSessao[]
+  movimentosCaixa CaixaMovimento[]
+  vendas       Venda[] @relation("VendaVendedor")
+  vendasAutorizadas Venda[] @relation("VendaAutorizadaPor")
+  vendasCanceladas Venda[] @relation("VendaCanceladaPor")
+  boletosBaixados ContaReceber[]
 }
 
 model Sessao {
@@ -69,6 +75,9 @@ model Configuracao {
   despesasFixasPct           Int      @default(1500)
   comissaoPct                Int      @default(0)
   margemPadraoPct            Int      @default(2000)
+
+  // Orçamento vale por X dias (o preço do orçamento é respeitado até lá).
+  validadeOrcamentoDias      Int      @default(7)
   atualizadoEm               DateTime @updatedAt
 }
 
@@ -166,6 +175,7 @@ model Produto {
   historicoPrecos HistoricoPreco[]
   movimentacoes MovimentacaoEstoque[]
   itensEntrada  EntradaItem[]
+  itensVenda    VendaItem[]
 
   @@index([descricaoBusca])
   @@index([categoriaId])
@@ -235,6 +245,8 @@ model MovimentacaoEstoque {
   motivo        String?
   entradaId     Int?
   entrada       Entrada?         @relation(fields: [entradaId], references: [id])
+  vendaId       Int?
+  venda         Venda?           @relation(fields: [vendaId], references: [id])
   usuarioId     Int?
   usuario       Usuario?         @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   criadoEm      DateTime         @default(now())
@@ -296,4 +308,203 @@ model EntradaItem {
   custoTotal        Int     // centavos (valor do item + rateio)
   custoMedioAntes   Int
   custoMedioDepois  Int
+}
+
+// ---------------------------------------------------------------- Etapa 4
+
+model Cliente {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  nomeBusca    String
+  documento    String?  @unique // CPF ou CNPJ, só dígitos/letras
+  telefone     String?
+  email        String?
+  cep          String?
+  logradouro   String?
+  numero       String?
+  complemento  String?
+  bairro       String?
+  cidade       String?
+  uf           String?
+  observacoes  String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  vendas  Venda[]
+  boletos ContaReceber[]
+
+  @@index([nomeBusca])
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  DEBITO
+  CREDITO
+  BOLETO
+}
+
+enum StatusCaixa {
+  ABERTO
+  FECHADO
+}
+
+/// Sessão de caixa: do momento em que o operador abre até o fechamento com conferência.
+model CaixaSessao {
+  id          Int         @id @default(autoincrement())
+  usuarioId   Int
+  usuario     Usuario     @relation(fields: [usuarioId], references: [id])
+  status      StatusCaixa @default(ABERTO)
+  fundoTroco  Int         // centavos
+  abertoEm    DateTime    @default(now())
+  fechadoEm   DateTime?
+  observacao  String?
+
+  movimentos  CaixaMovimento[]
+  fechamento  CaixaFechamento[]
+  vendas      Venda[]
+
+  @@index([usuarioId, status])
+  @@index([abertoEm])
+}
+
+enum TipoMovimentoCaixa {
+  VENDA
+  ESTORNO_VENDA
+  SANGRIA
+  SUPRIMENTO
+}
+
+model CaixaMovimento {
+  id        Int                @id @default(autoincrement())
+  sessaoId  Int
+  sessao    CaixaSessao        @relation(fields: [sessaoId], references: [id])
+  tipo      TipoMovimentoCaixa
+  forma     FormaPagamento
+  valor     Int                // centavos; positivo entra, negativo sai
+  motivo    String?
+  vendaId   Int?
+  venda     Venda?             @relation(fields: [vendaId], references: [id])
+  usuarioId Int?
+  usuario   Usuario?           @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  criadoEm  DateTime           @default(now())
+
+  @@index([sessaoId])
+}
+
+/// Conferência do fechamento, por forma de pagamento.
+model CaixaFechamento {
+  id        Int            @id @default(autoincrement())
+  sessaoId  Int
+  sessao    CaixaSessao    @relation(fields: [sessaoId], references: [id])
+  forma     FormaPagamento
+  esperado  Int
+  informado Int
+  diferenca Int
+
+  @@unique([sessaoId, forma])
+}
+
+enum StatusVenda {
+  ORCAMENTO
+  CONVERTIDO // orçamento que virou venda
+  FINALIZADA
+  CANCELADA
+}
+
+model Venda {
+  id                 Int         @id @default(autoincrement())
+  status             StatusVenda
+  clienteId          Int?
+  cliente            Cliente?    @relation(fields: [clienteId], references: [id])
+  vendedorId         Int
+  vendedor           Usuario     @relation("VendaVendedor", fields: [vendedorId], references: [id])
+  caixaSessaoId      Int?
+  caixaSessao        CaixaSessao? @relation(fields: [caixaSessaoId], references: [id])
+  orcamentoOrigemId  Int?        @unique
+  orcamentoOrigem    Venda?      @relation("OrcamentoVenda", fields: [orcamentoOrigemId], references: [id])
+  vendaGerada        Venda?      @relation("OrcamentoVenda")
+  subtotal           Int         // soma de quantidade × preço, sem desconto
+  descontoItens      Int         @default(0)
+  descontoGeral      Int         @default(0)
+  total              Int
+  troco              Int         @default(0)
+  validoAte          DateTime?   // orçamentos
+  observacoes        String?
+  // Autorização do gerente (desconto acima do limite / venda sem estoque)
+  autorizadoPorId    Int?
+  autorizadoPor      Usuario?    @relation("VendaAutorizadaPor", fields: [autorizadoPorId], references: [id], onDelete: SetNull)
+  motivosAutorizacao String?
+  criadoEm           DateTime    @default(now())
+  finalizadaEm       DateTime?
+  canceladaEm        DateTime?
+  canceladaPorId     Int?
+  canceladaPor       Usuario?    @relation("VendaCanceladaPor", fields: [canceladaPorId], references: [id], onDelete: SetNull)
+  motivoCancelamento String?
+  cancelamentoAutorizadoPorId Int?
+
+  itens         VendaItem[]
+  pagamentos    VendaPagamento[]
+  boletos       ContaReceber[]
+  movimentosCaixa CaixaMovimento[]
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@index([status, criadoEm])
+  @@index([finalizadaEm])
+  @@index([vendedorId])
+  @@index([clienteId])
+}
+
+model VendaItem {
+  id            Int     @id @default(autoincrement())
+  vendaId       Int
+  venda         Venda   @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  produtoId     Int
+  produto       Produto @relation(fields: [produtoId], references: [id])
+  descricao     String  // cópia no momento da venda
+  unidadeSigla  String
+  quantidade    Int     // milésimos
+  precoUnitario Int     // centavos
+  desconto      Int     @default(0) // centavos, na linha
+  total         Int     // quantidade × preço − desconto
+  // Custo médio no momento da venda: o relatório de margem fica certo mesmo se o custo mudar depois.
+  custoUnitario Int
+}
+
+model VendaPagamento {
+  id       Int            @id @default(autoincrement())
+  vendaId  Int
+  venda    Venda          @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  forma    FormaPagamento
+  valor    Int            // centavos (no dinheiro, já descontado o troco)
+  parcelas Int            @default(1)
+}
+
+enum StatusContaReceber {
+  ABERTO
+  PAGO
+  CANCELADO
+}
+
+/// Parcelas de boleto a receber.
+model ContaReceber {
+  id           Int                @id @default(autoincrement())
+  vendaId      Int
+  venda        Venda              @relation(fields: [vendaId], references: [id])
+  clienteId    Int
+  cliente      Cliente            @relation(fields: [clienteId], references: [id])
+  parcela      Int
+  totalParcelas Int
+  valor        Int
+  vencimento   DateTime
+  status       StatusContaReceber @default(ABERTO)
+  pagoEm       DateTime?
+  valorPago    Int?
+  baixadoPorId Int?
+  baixadoPor   Usuario?           @relation(fields: [baixadoPorId], references: [id], onDelete: SetNull)
+  criadoEm     DateTime           @default(now())
+
+  @@index([status, vencimento])
+  @@index([clienteId])
 }

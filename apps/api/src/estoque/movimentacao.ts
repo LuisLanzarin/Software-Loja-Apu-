@@ -13,6 +13,7 @@ export interface Movimento {
   motivo?: string | null;
   usuarioId?: number | null;
   entradaId?: number;
+  vendaId?: number;
   permitirNegativo?: boolean;
 }
 
@@ -43,6 +44,7 @@ export async function movimentar(tx: Tx, m: Movimento) {
       motivo: m.motivo ?? null,
       usuarioId: m.usuarioId ?? null,
       entradaId: m.entradaId,
+      vendaId: m.vendaId,
     },
   });
   return produto;

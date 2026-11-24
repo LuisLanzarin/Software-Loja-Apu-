@@ -16,6 +16,7 @@ const schema = z.object({
   /** Centavos: 10000 = R$ 100,00 */
   cancelamentoMaxSemAutorizacao: z.number().int().min(0).max(100_000_000),
   sessaoInatividadeMin: z.number().int().min(5, 'Mínimo de 5 minutos').max(720, 'Máximo de 12 horas'),
+  validadeOrcamentoDias: z.number().int().min(1).max(90).optional(),
 });
 
 const precificacaoSchema = z

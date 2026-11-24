@@ -3,6 +3,8 @@ export class ApiError extends Error {
     message: string,
     public status: number,
     public codigo?: string,
+    /** Corpo completo da resposta de erro (ex.: motivos da autorização). */
+    public dados?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -33,7 +35,7 @@ export async function api<T = void>(caminho: string, opcoes: { method?: string; 
       window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA));
     }
     const msg = Array.isArray(dados.message) ? dados.message.join('; ') : dados.message;
-    throw new ApiError(msg ?? 'Erro inesperado. Tente novamente.', r.status, dados.codigo);
+    throw new ApiError(msg ?? 'Erro inesperado. Tente novamente.', r.status, dados.codigo, dados);
   }
   return dados as T;
 }
