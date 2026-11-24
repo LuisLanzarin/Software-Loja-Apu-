@@ -19,8 +19,8 @@ const MENU: { grupo: string; itens: ItemMenu[] }[] = [
     itens: [
       { para: '/pdv', rotulo: 'Vender', icone: ShoppingCart, permissao: 'venda.realizar' },
       { para: '/vendas', rotulo: 'Vendas e orçamentos', icone: Receipt },
-      { para: '/caixa', rotulo: 'Caixa', icone: Wallet },
-      { para: '/clientes', rotulo: 'Clientes', icone: Users },
+      { para: '/caixa', rotulo: 'Caixa', icone: Wallet, permissao: 'caixa.ver_todos' },
+      { para: '/clientes', rotulo: 'Clientes', icone: Users, permissao: 'cliente.editar' },
       { para: '/boletos', rotulo: 'Boletos a receber', icone: FileText, permissao: 'boleto.baixar' },
       { para: '/produtos', rotulo: 'Produtos', icone: Package },
       { para: '/estoque', rotulo: 'Estoque', icone: Warehouse },

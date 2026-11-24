@@ -27,11 +27,17 @@ export class CaixaController {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  /** Caixa aberto do usuário logado. Sem o "esperado": a conferência é cega. */
+  /**
+   * Caixa aberto do restaurante. Sem o "esperado" (a conferência do fechamento é cega).
+   * Quem só lança vendas recebe apenas se está aberto, desde quando e por quem.
+   */
   @Get('atual')
   async atual(@UsuarioAtual() u: UsuarioSessao) {
-    const s = await this.caixa.sessaoAberta(u.id);
+    const s = await this.caixa.sessaoAberta();
     if (!s) return { sessao: null };
+    if (!temPermissao(u.perfil, 'caixa.ver_todos')) {
+      return { sessao: { id: s.id, status: s.status, abertoEm: s.abertoEm, usuario: { nome: s.usuario.nome } } };
+    }
     const { esperado: _, ...r } = await this.caixa.resumo(s.id);
     return { sessao: r };
   }
@@ -62,15 +68,16 @@ export class CaixaController {
   }
 
   @Get('sessoes')
-  async listar(@Query('pagina') pagina = '1', @UsuarioAtual() u: UsuarioSessao) {
+  @RequerPermissao('caixa.ver_todos')
+  async listar(@Query('pagina') pagina = '1') {
     const p = Math.max(1, Number.parseInt(pagina, 10) || 1);
-    const verTodos = temPermissao(u.perfil, 'caixa.ver_todos');
-    const [itens, total] = await this.caixa.listar(verTodos ? undefined : u.id, p);
+    const [itens, total] = await this.caixa.listar(p);
     return { itens, total, pagina: p, porPagina: 30 };
   }
 
   @Get('sessoes/:id')
-  obter(@Param('id', ParseIntPipe) id: number, @UsuarioAtual() u: UsuarioSessao) {
-    return this.caixa.obterVisivel(id, u.id, temPermissao(u.perfil, 'caixa.ver_todos'));
+  @RequerPermissao('caixa.ver_todos')
+  obter(@Param('id', ParseIntPipe) id: number) {
+    return this.caixa.resumo(id);
   }
 }

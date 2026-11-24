@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { FormaPagamento } from '../generated/prisma/client.ts';
 import { PrismaService } from '../prisma/prisma.service.ts';
 
@@ -10,18 +10,30 @@ export type FormaCaixa = (typeof FORMAS_CAIXA)[number];
 export class CaixaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  sessaoAberta(usuarioId: number) {
-    return this.prisma.caixaSessao.findFirst({ where: { usuarioId, status: 'ABERTO' } });
+  /**
+   * O caixa é ÚNICO: o gerente abre, todos lançam vendas nele e o gerente fecha.
+   * (Se houver mais de uma sessão aberta de versões antigas, vale a mais recente.)
+   */
+  sessaoAberta() {
+    return this.prisma.caixaSessao.findFirst({
+      where: { status: 'ABERTO' },
+      orderBy: { id: 'desc' },
+      include: { usuario: { select: { nome: true } } },
+    });
   }
 
-  async exigirSessaoAberta(usuarioId: number) {
-    const s = await this.sessaoAberta(usuarioId);
-    if (!s) throw new BadRequestException({ message: 'Abra o caixa antes de registrar vendas.', codigo: 'CAIXA_FECHADO' });
+  async exigirSessaoAberta() {
+    const s = await this.sessaoAberta();
+    if (!s) throw new BadRequestException({ message: 'O caixa está fechado. Peça ao gerente para abrir o caixa.', codigo: 'CAIXA_FECHADO' });
     return s;
   }
 
   async abrir(usuarioId: number, fundoTroco: number) {
-    if (await this.sessaoAberta(usuarioId)) throw new BadRequestException('Você já tem um caixa aberto.');
+    const aberto = await this.sessaoAberta();
+    if (aberto) {
+      const hora = aberto.abertoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      throw new BadRequestException(`O caixa já está aberto (por ${aberto.usuario.nome}, às ${hora}).`);
+    }
     return this.prisma.caixaSessao.create({ data: { usuarioId, fundoTroco } });
   }
 
@@ -69,7 +81,7 @@ export class CaixaService {
   }
 
   async movimentar(usuarioId: number, tipo: 'SANGRIA' | 'SUPRIMENTO', valor: number, motivo: string) {
-    const sessao = await this.exigirSessaoAberta(usuarioId);
+    const sessao = await this.exigirSessaoAberta();
     if (tipo === 'SANGRIA') {
       const { esperado } = await this.resumo(sessao.id);
       if (valor > esperado.DINHEIRO) throw new BadRequestException('A sangria é maior que o dinheiro em caixa.');
@@ -81,7 +93,9 @@ export class CaixaService {
 
   /** Fechamento com conferência cega: o operador informa o que contou; o sistema compara. */
   async fechar(usuarioId: number, informado: Record<FormaCaixa, number>, observacao: string | null) {
-    const sessao = await this.exigirSessaoAberta(usuarioId);
+    const sessao = await this.exigirSessaoAberta();
+    const quem = sessao.usuarioId === usuarioId ? null : `Fechado por outro usuário (id ${usuarioId}).`;
+    observacao = [observacao, quem].filter(Boolean).join(' ') || null;
     const { esperado } = await this.resumo(sessao.id);
     await this.prisma.$transaction([
       ...FORMAS_CAIXA.map((forma) =>
@@ -94,25 +108,15 @@ export class CaixaService {
     return this.resumo(sessao.id);
   }
 
-  listar(usuarioId: number | undefined, pagina: number) {
-    const where = usuarioId ? { usuarioId } : {};
+  listar(pagina: number) {
     return this.prisma.$transaction([
       this.prisma.caixaSessao.findMany({
-        where,
         orderBy: { id: 'desc' },
         skip: (pagina - 1) * 30,
         take: 30,
         include: { usuario: { select: { nome: true } }, fechamento: true },
       }),
-      this.prisma.caixaSessao.count({ where }),
+      this.prisma.caixaSessao.count(),
     ]);
-  }
-
-  async obterVisivel(id: number, usuarioId: number, verTodos: boolean) {
-    const r = await this.resumo(id);
-    if (!verTodos && r.usuarioId !== usuarioId) throw new ForbiddenException('Você só pode ver o seu próprio caixa.');
-    // Enquanto aberto, o operador não vê o "esperado" (conferência cega); quem supervisiona vê.
-    if (r.status === 'ABERTO' && !verTodos) return { ...r, esperado: undefined };
-    return r;
   }
 }

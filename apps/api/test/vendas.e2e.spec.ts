@@ -37,14 +37,24 @@ describe('Caixa', () => {
     expect(r.body.codigo).toBe('CAIXA_FECHADO');
   });
 
-  it('abre o caixa com fundo de troco (uma sessão por vez)', async () => {
-    await post('/api/caixa/abrir', { fundoTroco: 10000 }).expect(201);
-    expect((await post('/api/caixa/abrir', { fundoTroco: 0 })).status).toBe(400);
-    await post('/api/caixa/abrir', { fundoTroco: 5000 }, gerente).expect(201);
+  it('vendedor e financeiro não abrem o caixa', async () => {
+    expect((await post('/api/caixa/abrir', { fundoTroco: 0 })).status).toBe(403);
+    expect((await post('/api/caixa/abrir', { fundoTroco: 0 }, financeiro)).status).toBe(403);
   });
 
-  it('financeiro não opera caixa', async () => {
-    expect((await post('/api/caixa/abrir', { fundoTroco: 0 }, financeiro)).status).toBe(403);
+  it('o gerente abre o caixa único do estabelecimento (um por vez)', async () => {
+    await post('/api/caixa/abrir', { fundoTroco: 10000 }, gerente).expect(201);
+    const segundo = await post('/api/caixa/abrir', { fundoTroco: 0 }, admin);
+    expect(segundo.status).toBe(400);
+    expect(segundo.body.message).toMatch(/já está aberto/);
+  });
+
+  it('vendedor só sabe se o caixa está aberto; não vê valores nem o histórico', async () => {
+    const r = await get('/api/caixa/atual');
+    expect(r.body.sessao).toMatchObject({ status: 'ABERTO', usuario: { nome: 'gerente' } });
+    expect(r.body.sessao).not.toHaveProperty('totais');
+    expect(r.body.sessao).not.toHaveProperty('movimentos');
+    expect((await get('/api/caixa/sessoes')).status).toBe(403);
   });
 });
 
@@ -123,9 +133,10 @@ describe('Boleto', () => {
 
   it('exige cliente com CPF/CNPJ', async () => {
     expect((await post('/api/vendas', noBoleto())).body.message).toMatch(/cliente/);
-    const semDoc = (await post('/api/clientes', { nome: 'José da Obra' })).body.id;
+    expect((await post('/api/clientes', { nome: 'Vendedor não cadastra' })).status).toBe(403);
+    const semDoc = (await post('/api/clientes', { nome: 'José da Obra' }, admin)).body.id;
     expect((await post('/api/vendas', noBoleto(semDoc))).body.message).toMatch(/CPF/);
-    cliente = (await post('/api/clientes', { nome: 'Maria Construtora', documento: '529.982.247-25' })).body.id;
+    cliente = (await post('/api/clientes', { nome: 'Maria Construtora', documento: '529.982.247-25' }, admin)).body.id;
   });
 
   it('gera as parcelas, que somam o total e vencem a cada 30 dias', async () => {
@@ -178,22 +189,22 @@ describe('Orçamento', () => {
 });
 
 describe('Cancelamento', () => {
-  it('até o limite, o vendedor cancela; estoque e caixa voltam', async () => {
+  it('vendedor só cancela com a senha do gerente, qualquer que seja o valor; estoque e caixa voltam', async () => {
     const v = (await post('/api/vendas', venda({ pagamentos: [{ forma: 'DINHEIRO', valor: 9000 }] }))).body;
     const antes = await estoque(cimento);
-    const r = await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Cliente desistiu' });
+    const semSenha = await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Cliente desistiu' });
+    expect(semSenha.status).toBe(403);
+    expect(semSenha.body.motivos[0].tipo).toBe('CANCELAMENTO');
+    const r = await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Cliente desistiu', autorizacao: GERENTE });
     expect(r.status).toBe(201);
     expect(r.body.status).toBe('CANCELADA');
     expect(await estoque(cimento)).toBe(antes + 2000);
   });
 
-  it('acima do limite, precisa do gerente', async () => {
+  it('o gerente cancela direto', async () => {
     const v = (await post('/api/vendas', venda({ itens: [{ produtoId: cimento, quantidade: 3000 }], pagamentos: [{ forma: 'PIX', valor: 13500 }] }))).body;
     expect(v.total).toBe(13500);
-    const r = await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Produto errado' });
-    expect(r.status).toBe(403);
-    expect(r.body.motivos[0].tipo).toBe('CANCELAMENTO');
-    expect((await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Produto errado', autorizacao: GERENTE })).status).toBe(201);
+    expect((await post(`/api/vendas/${v.id}/cancelar`, { motivo: 'Produto errado' }, gerente)).status).toBe(201);
   });
 });
 
@@ -203,27 +214,33 @@ describe('Fechamento de caixa', () => {
     expect(r.body.itens.every((v: { vendedor: { nome: string } }) => v.vendedor.nome === 'vendedor')).toBe(true);
   });
 
-  it('enquanto aberto, o operador não vê o valor esperado (conferência cega)', async () => {
-    const r = await get('/api/caixa/atual');
+  it('enquanto aberto, nem o gerente vê o valor esperado na tela do caixa (conferência cega)', async () => {
+    const r = await get('/api/caixa/atual', gerente);
     expect(r.body.sessao.status).toBe('ABERTO');
+    expect(r.body.sessao).toHaveProperty('totais');
     expect(r.body.sessao).not.toHaveProperty('esperado');
   });
 
-  it('sangria não pode passar do dinheiro em caixa', async () => {
-    expect((await post('/api/caixa/movimentos', { tipo: 'SANGRIA', valor: 99999999, motivo: 'Teste' })).status).toBe(400);
-    await post('/api/caixa/movimentos', { tipo: 'SANGRIA', valor: 5000, motivo: 'Depósito no banco' }).expect(201);
+  it('só o gerente faz sangria, e ela não pode passar do dinheiro em caixa', async () => {
+    expect((await post('/api/caixa/movimentos', { tipo: 'SANGRIA', valor: 1000, motivo: 'Teste' })).status).toBe(403);
+    expect((await post('/api/caixa/movimentos', { tipo: 'SANGRIA', valor: 99999999, motivo: 'Teste' }, gerente)).status).toBe(400);
+    await post('/api/caixa/movimentos', { tipo: 'SANGRIA', valor: 5000, motivo: 'Depósito no banco' }, gerente).expect(201);
   });
 
-  it('fecha comparando o informado com o esperado', async () => {
-    const r = await post('/api/caixa/fechar', { informado: { DINHEIRO: 0, PIX: 0, DEBITO: 0, CREDITO: 0 }, observacao: null });
+  it('só o gerente fecha, comparando o informado com o esperado', async () => {
+    const informado = { DINHEIRO: 0, PIX: 0, DEBITO: 0, CREDITO: 0 };
+    expect((await post('/api/caixa/fechar', { informado })).status).toBe(403);
+    const r = await post('/api/caixa/fechar', { informado, observacao: null }, gerente);
     expect(r.status).toBe(201);
     const dinheiro = r.body.fechamento.find((f: { forma: string }) => f.forma === 'DINHEIRO');
-    // fundo + vendas em dinheiro (já sem troco) − venda cancelada − sangria
-    const vendasDinheiro = 7980 /* simples */ + 2980 /* mista */ + 7180 /* c/ desconto */ + 3890 /* 1 SC − R$1 */ + 7980 /* orçamento */ + 9000; /* cancelada */
+    // fundo + vendas em dinheiro de TODOS (já sem troco) − venda cancelada − sangria
+    const vendasDinheiro = 7980 /* simples */ + 2980 /* mista */ + 7180 /* c/ desconto */ + 3890 /* 1 SC − R$1 */
+      + 7180 /* do gerente */ + 7980 /* orçamento */ + 9000; /* cancelada */
     expect(dinheiro.esperado).toBe(10000 + vendasDinheiro - 9000 - 5000);
+    expect(dinheiro.diferenca).toBe(-dinheiro.esperado);
     const pix = r.body.fechamento.find((f: { forma: string }) => f.forma === 'PIX');
     expect(pix.esperado).toBe(5000 + 13500 - 13500);
-    expect(dinheiro.diferenca).toBe(-dinheiro.esperado);
+    expect(r.body.fechamento.find((f: { forma: string }) => f.forma === 'DEBITO').esperado).toBe(12500);
     expect(r.body.totais.boletos).toBe(3990);
     expect((await get('/api/caixa/atual')).body).toEqual({ sessao: null });
   });
@@ -231,7 +248,7 @@ describe('Fechamento de caixa', () => {
 
 describe('Proteção da senha do gerente', () => {
   it('5 senhas erradas na autorização bloqueiam o gerente', async () => {
-    await post('/api/caixa/abrir', { fundoTroco: 0 }).expect(201);
+    await post('/api/caixa/abrir', { fundoTroco: 0 }, gerente).expect(201);
     for (let i = 0; i < 5; i++) await post('/api/vendas', venda({ descontoGeral: 800, autorizacao: { ...GERENTE, senha: 'chute' } }));
     const r = await post('/api/vendas', venda({ descontoGeral: 800, autorizacao: GERENTE }));
     expect(r.status).toBe(403);

@@ -77,9 +77,9 @@ function App() {
         <Route path="pdv" element={<SoCom permissao="venda.realizar"><PDV /></SoCom>} />
         <Route path="vendas" element={<Vendas />} />
         <Route path="vendas/:id" element={<VendaDetalhe />} />
-        <Route path="caixa" element={<Caixa />} />
-        <Route path="caixa/:id" element={<CaixaSessao />} />
-        <Route path="clientes" element={<Clientes />} />
+        <Route path="caixa" element={<SoCom permissao="caixa.ver_todos"><Caixa /></SoCom>} />
+        <Route path="caixa/:id" element={<SoCom permissao="caixa.ver_todos"><CaixaSessao /></SoCom>} />
+        <Route path="clientes" element={<SoCom permissao="cliente.editar"><Clientes /></SoCom>} />
         <Route path="relatorios" element={<SoCom permissao="relatorio.ver"><Relatorios /></SoCom>} />
         <Route path="backup" element={<SoCom permissao="backup.gerenciar"><Backup /></SoCom>} />
         <Route path="boletos" element={<SoCom permissao="boleto.baixar"><Boletos /></SoCom>} />

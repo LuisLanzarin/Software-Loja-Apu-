@@ -20,9 +20,9 @@ export function CaixaSessao() {
         acoes={<Botao variante="secundario" onClick={() => navegar('/caixa')}><ArrowLeft className="size-4" aria-hidden /> Caixa</Botao>}
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Cartao><p className="text-sm text-stone-600">Vendas</p><p className="mt-1 text-lg font-semibold tabular-nums">{s.totais.quantidadeVendas} · {formatarReais(s.totais.faturamento)}</p></Cartao>
-        <Cartao><p className="text-sm text-stone-600">Estornos</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(s.totais.estornos)}</p></Cartao>
-        <Cartao><p className="text-sm text-stone-600">No boleto (a prazo)</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(s.totais.boletos)}</p></Cartao>
+        <Cartao><p className="text-sm text-stone-600">Vendas</p><p className="mt-1 text-lg font-semibold tabular-nums">{s.totais!.quantidadeVendas} · {formatarReais(s.totais!.faturamento)}</p></Cartao>
+        <Cartao><p className="text-sm text-stone-600">Estornos</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(s.totais!.estornos)}</p></Cartao>
+        <Cartao><p className="text-sm text-stone-600">No boleto (a prazo)</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(s.totais!.boletos)}</p></Cartao>
       </div>
       {s.status === 'FECHADO' && <Cartao titulo="Conferência do fechamento" className="mb-6"><Conferencia sessao={s} /></Cartao>}
       <Cartao titulo="Movimentos" className="overflow-hidden [&>div:last-child]:p-0">

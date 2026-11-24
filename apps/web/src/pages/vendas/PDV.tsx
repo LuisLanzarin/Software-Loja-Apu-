@@ -9,6 +9,7 @@ import { api } from '../../lib/api';
 import { useCaixaAtual } from '../../lib/caixa';
 import { valorDe } from '../../lib/calculosEstoque';
 import { decimalParaTexto, formatarPct, formatarQtd, formatarReais, lerDecimal } from '../../lib/formato';
+import { usePode } from '../../lib/sessao';
 import type { Cliente, MotivoAutorizacao, Produto, Venda } from '../../lib/tipos';
 import { AbrirCaixa } from '../caixa/AbrirCaixa';
 import { JanelaPagamento, type PagamentoEnvio } from './JanelaPagamento';
@@ -29,6 +30,7 @@ export function PDV() {
   const navegar = useNavigate();
   const [params, setParams] = useSearchParams();
   const busca = useRef<BuscaProdutoRef>(null);
+  const pode = usePode();
   const { data: caixa, isLoading: carregandoCaixa } = useCaixaAtual();
   const { data: cfg } = useQuery({
     queryKey: ['configuracao'],
@@ -171,16 +173,26 @@ export function PDV() {
           {orcamento && <Etiqueta cor="azul">Orçamento nº {orcamento.id}</Etiqueta>}
         </h1>
         {caixa ? (
-          <Link to="/caixa" className="text-sm text-stone-600 hover:underline">
-            Caixa aberto desde {new Date(caixa.abertoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {caixa.totais.quantidadeVendas} venda(s)
-          </Link>
+          pode('caixa.ver_todos') ? (
+            <Link to="/caixa" className="text-sm text-stone-600 hover:underline">
+              Caixa aberto desde {new Date(caixa.abertoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {caixa.totais?.quantidadeVendas ?? 0} venda(s)
+            </Link>
+          ) : (
+            <span className="text-sm text-stone-600">Caixa aberto por {caixa.usuario.nome} às {new Date(caixa.abertoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+          )
         ) : null}
       </div>
 
       {!caixa && (
         <Cartao className="mb-4 border-l-4 border-amber-500">
-          <p className="mb-3 text-sm font-medium">O caixa está fechado. Abra o caixa para registrar vendas (orçamentos podem ser feitos sem caixa).</p>
-          <AbrirCaixa compacto />
+          {pode('caixa.operar') ? (
+            <>
+              <p className="mb-3 text-sm font-medium">O caixa está fechado. Abra o caixa para registrar vendas (orçamentos podem ser feitos sem caixa).</p>
+              <AbrirCaixa compacto />
+            </>
+          ) : (
+            <p className="text-sm font-medium">O caixa está fechado. Peça ao gerente para abrir o caixa antes de lançar vendas.</p>
+          )}
         </Cartao>
       )}
 

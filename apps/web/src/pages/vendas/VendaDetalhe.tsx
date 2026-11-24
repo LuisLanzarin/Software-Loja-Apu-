@@ -132,7 +132,10 @@ export function VendaDetalhe() {
 
       <Janela aberta={cancelando} aoFechar={() => setCancelando(false)} titulo={`Cancelar venda nº ${v.id}`}>
         <form onSubmit={(e: FormEvent) => { e.preventDefault(); cancelar(); }} className="space-y-4">
-          <p className="text-sm text-stone-600">Os produtos voltam para o estoque e o valor sai do seu caixa como estorno. Boletos em aberto são cancelados.</p>
+          <p className="text-sm text-stone-600">
+            Os produtos voltam para o estoque e o valor sai do caixa como estorno. Boletos em aberto são cancelados.
+            {!pode('venda.cancelar') && <strong> Será pedida a senha do gerente.</strong>}
+          </p>
           <Campo rotulo="Motivo" required minLength={5} autoFocus value={motivoTexto} onChange={(e) => setMotivoTexto(e.target.value)} placeholder="Ex.: cliente desistiu da compra" />
           <Alerta>{erro}</Alerta>
           <div className="flex justify-end gap-2">

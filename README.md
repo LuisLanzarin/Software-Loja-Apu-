@@ -73,7 +73,7 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 ## Vendas e caixa
 
 - O preço vem sempre do cadastro (ou do orçamento, dentro da validade); a tela não consegue mandar outro preço.
-- **Pedem a senha do gerente:** desconto acima do limite, venda sem estoque e cancelamento acima do valor configurado.
+- **Pedem a senha do gerente:** desconto acima do limite, venda sem estoque e qualquer cancelamento feito por quem não é gerente.
   Gerente/Admin vendendo não precisam digitar a própria senha. A autorização fica registrada na venda e na auditoria,
   e senha errada conta para o bloqueio do gerente.
 - Pagamento misto (dinheiro, PIX, débito, crédito parcelado, boleto). Troco só no dinheiro.
@@ -96,23 +96,22 @@ Exemplo: custo R$ 30,00, 8% + 12% + 2% e margem 15% → R$ 47,62, que deixa exat
 
 | Permissão | Vendedor | Financeiro | Gerente | Admin |
 |---|:-:|:-:|:-:|:-:|
-| Consultar produtos e preço de venda | ✅ | ✅ | ✅ | ✅ |
+| Lançar vendas (desconto até o limite) | ✅ | | ✅ | ✅ |
+| Consultar produtos, preços e estoque (sem alterar) | ✅ | ✅ | ✅ | ✅ |
+| Cancelar venda | só com senha do gerente | | ✅ | ✅ |
+| **Abrir, sangria, suprimento e fechar o caixa** | | | ✅ | ✅ |
+| Ver o caixa e o histórico de caixas | | ✅ | ✅ | ✅ |
 | Ver custo, margem e fornecedores | | ✅ | ✅ | ✅ |
-| Cadastrar produtos, fornecedores, categorias e unidades | | ✅ | ✅ | ✅ |
+| Cadastrar produtos, fornecedores, clientes, categorias e unidades | | ✅ | ✅ | ✅ |
 | Formação de preço e reajuste em lote | | ✅ | ✅ | ✅ |
-| Consultar saldo e movimentações de estoque | ✅ | ✅ | ✅ | ✅ |
 | Lançar entrada de mercadoria | | ✅ | ✅ | ✅ |
 | Ajustes, perdas, inventário e cancelar entrada | | | ✅ | ✅ |
-| Vender, fazer orçamento e operar o próprio caixa | ✅ | | ✅ | ✅ |
-| Ver vendas e caixas de todos | | ✅ | ✅ | ✅ |
-| Cadastrar clientes | ✅ | ✅ | ✅ | ✅ |
-| Dar baixa em boletos | | ✅ | ✅ | ✅ |
-| Relatórios | | ✅ | ✅ | ✅ |
-| Backup e restauração | | | | ✅ |
-| Autorizar desconto/cancelamento acima do limite | | | ✅ | ✅ |
-| Editar configurações | | | ✅ | ✅ |
-| Ver auditoria | | | ✅ | ✅ |
-| Gerenciar usuários | | | | ✅ |
+| Ver vendas de todos | | ✅ | ✅ | ✅ |
+| Dar baixa em boletos e ver relatórios | | ✅ | ✅ | ✅ |
+| Editar configurações e ver auditoria | | | ✅ | ✅ |
+| Usuários, backup e restauração | | | | ✅ |
+
+**Caixa único:** o gerente abre o caixa do estabelecimento, todos lançam as vendas nele e o gerente fecha com a conferência.
 
 A matriz fica em `apps/api/src/common/permissoes.ts`.
 

@@ -22,9 +22,12 @@ export const PERMISSOES = {
   'estoque.cancelar_entrada': [GERENTE, ADMIN],
   'venda.realizar': [VENDEDOR, GERENTE, ADMIN],
   'venda.ver_todas': [FINANCEIRO, GERENTE, ADMIN],
-  'caixa.operar': [VENDEDOR, GERENTE, ADMIN],
+  /** Cancelar sem pedir senha. Os demais cancelam só com a senha do gerente. */
+  'venda.cancelar': [GERENTE, ADMIN],
+  /** Abrir, sangria, suprimento e fechar o caixa (único) do restaurante. */
+  'caixa.operar': [GERENTE, ADMIN],
   'caixa.ver_todos': [FINANCEIRO, GERENTE, ADMIN],
-  'cliente.editar': [VENDEDOR, FINANCEIRO, GERENTE, ADMIN],
+  'cliente.editar': [FINANCEIRO, GERENTE, ADMIN],
   'boleto.baixar': [FINANCEIRO, GERENTE, ADMIN],
   'relatorio.ver': [FINANCEIRO, GERENTE, ADMIN],
   'backup.gerenciar': [ADMIN],

@@ -13,8 +13,8 @@ const schema = z.object({
   nomeLoja: z.string().trim().min(1, 'Informe o nome da loja').max(80),
   /** Pontos-base: 500 = 5,00% */
   descontoMaxSemAutorizacao: z.number().int().min(0).max(10000, 'O desconto máximo é 100%'),
-  /** Centavos: 10000 = R$ 100,00 */
-  cancelamentoMaxSemAutorizacao: z.number().int().min(0).max(100_000_000),
+  /** Não é mais usado: cancelar exige gerente (mantido por compatibilidade). */
+  cancelamentoMaxSemAutorizacao: z.number().int().min(0).max(100_000_000).optional(),
   sessaoInatividadeMin: z.number().int().min(5, 'Mínimo de 5 minutos').max(720, 'Máximo de 12 horas'),
   validadeOrcamentoDias: z.number().int().min(1).max(90).optional(),
   /** 0 = não usa taxa de serviço. Até 30%. */

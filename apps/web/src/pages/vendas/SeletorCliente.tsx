@@ -5,11 +5,13 @@ import { ClienteForm } from '../../components/ClienteForm';
 import { Janela } from '../../components/ui';
 import { api } from '../../lib/api';
 import { formatarDocumento } from '../../lib/formato';
+import { usePode } from '../../lib/sessao';
 import type { Cliente, Pagina } from '../../lib/tipos';
 
 export function SeletorCliente({ cliente, aoMudar }: { cliente: Cliente | null; aoMudar: (c: Cliente | null) => void }) {
   const [texto, setTexto] = useState('');
   const [novo, setNovo] = useState(false);
+  const podeCadastrar = usePode()('cliente.editar');
   const q = useDeferredValue(texto.trim());
   const { data } = useQuery({
     queryKey: ['clientes-busca', q],
@@ -42,13 +44,13 @@ export function SeletorCliente({ cliente, aoMudar }: { cliente: Cliente | null; 
           aria-label="Buscar cliente"
           className="block w-full rounded-md border-0 bg-white px-3 py-2 text-sm ring-1 ring-stone-300 ring-inset focus:ring-2 focus:ring-marca-600 focus:outline-none"
         />
-        <button onClick={() => setNovo(true)} className="rounded-md px-2.5 text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50" title="Cadastrar cliente" aria-label="Cadastrar cliente">
+        {podeCadastrar && <button onClick={() => setNovo(true)} className="rounded-md px-2.5 text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50" title="Cadastrar cliente" aria-label="Cadastrar cliente">
           <UserPlus className="size-4" />
-        </button>
+        </button>}
       </div>
       {q.length >= 2 && data && (
         <ul className="absolute z-20 mt-1 w-full rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-stone-200">
-          {data.itens.length === 0 && <li className="px-3 py-2 text-stone-500">Nenhum cliente. Use + para cadastrar.</li>}
+          {data.itens.length === 0 && <li className="px-3 py-2 text-stone-500">Nenhum cliente encontrado.{podeCadastrar ? ' Use + para cadastrar.' : ''}</li>}
           {data.itens.map((c) => (
             <li key={c.id}>
               <button onClick={() => { aoMudar(c); setTexto(''); }} className="w-full px-3 py-2 text-left hover:bg-marca-50">

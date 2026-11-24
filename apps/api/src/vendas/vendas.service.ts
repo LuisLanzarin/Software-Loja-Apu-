@@ -143,7 +143,7 @@ export class VendasService {
     }
 
     // --- Daqui em diante: venda de verdade.
-    const sessao = await this.caixa.exigirSessaoAberta(u.id);
+    const sessao = await this.caixa.exigirSessaoAberta();
 
     // Autorização do gerente: desconto acima do limite e/ou venda sem estoque.
     const motivos: MotivoAutorizacao[] = [];
@@ -259,14 +259,14 @@ export class VendasService {
     if (v.status !== 'FINALIZADA') throw new BadRequestException('Só vendas finalizadas podem ser canceladas.');
     if (v.boletos.some((b) => b.status === 'PAGO')) throw new BadRequestException('Esta venda tem boleto já pago. Fale com o financeiro.');
 
-    const cfg = await this.config.obter();
-    const motivos: MotivoAutorizacao[] = v.total > cfg.cancelamentoMaxSemAutorizacao
-      ? [{ tipo: 'CANCELAMENTO', detalhe: `Venda de ${reais(v.total)} (limite sem autorização: ${reais(cfg.cancelamentoMaxSemAutorizacao)})` }]
-      : [];
+    // Cancelar mexe no caixa (estorno): só gerente/admin, ou outro usuário com a senha do gerente.
+    const motivos: MotivoAutorizacao[] = temPermissao(u.perfil, 'venda.cancelar')
+      ? []
+      : [{ tipo: 'CANCELAMENTO', detalhe: `Cancelamento da venda nº ${v.id} (${reais(v.total)})` }];
     const autorizadoPor = await this.resolverAutorizacao(motivos, u, autorizacao, ip);
 
     const pagamentosCaixa = v.pagamentos.filter((p) => p.forma !== 'BOLETO');
-    const sessao = pagamentosCaixa.length ? await this.caixa.exigirSessaoAberta(u.id) : null;
+    const sessao = pagamentosCaixa.length ? await this.caixa.exigirSessaoAberta() : null;
     const itens = await this.prisma.vendaItem.findMany({ where: { vendaId: id } });
 
     await this.prisma.$transaction(async (tx) => {

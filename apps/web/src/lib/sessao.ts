@@ -19,6 +19,7 @@ export type Permissao =
   | 'estoque.cancelar_entrada'
   | 'venda.realizar'
   | 'venda.ver_todas'
+  | 'venda.cancelar'
   | 'caixa.operar'
   | 'caixa.ver_todos'
   | 'cliente.editar'

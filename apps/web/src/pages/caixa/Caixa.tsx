@@ -26,15 +26,17 @@ export function Caixa() {
           <Conferencia sessao={fechado} />
         </Cartao>
       )}
-      {isLoading ? <Carregando /> : sessao ? <CaixaAberto sessao={sessao} aoFechar={setFechado} /> : pode('caixa.operar') && (
+      {isLoading ? <Carregando /> : sessao ? <CaixaAberto sessao={sessao} podeOperar={pode('caixa.operar')} aoFechar={setFechado} /> : pode('caixa.operar') ? (
         <Cartao titulo="Abrir caixa" className="mb-6"><AbrirCaixa /></Cartao>
+      ) : (
+        <Cartao className="mb-6"><p className="text-sm text-stone-600">O caixa está fechado. Só o gerente abre e fecha o caixa.</p></Cartao>
       )}
       <Historico />
     </>
   );
 }
 
-function CaixaAberto({ sessao, aoFechar }: { sessao: SessaoCaixa; aoFechar: (s: SessaoCaixa) => void }) {
+function CaixaAberto({ sessao, podeOperar, aoFechar }: { sessao: SessaoCaixa; podeOperar: boolean; aoFechar: (s: SessaoCaixa) => void }) {
   const qc = useQueryClient();
   const [janela, setJanela] = useState<'SANGRIA' | 'SUPRIMENTO' | 'FECHAR' | null>(null);
   const [erro, setErro] = useState('');
@@ -70,12 +72,12 @@ function CaixaAberto({ sessao, aoFechar }: { sessao: SessaoCaixa; aoFechar: (s: 
     }
   }
   const abrir = (j: typeof janela) => { setErro(''); setJanela(j); };
-  const t = sessao.totais;
+  const t = sessao.totais!;
 
   return (
     <>
       <div className="mb-6 grid gap-4 sm:grid-cols-4">
-        <Cartao><p className="text-sm text-stone-600">Aberto em</p><p className="mt-1 text-lg font-semibold">{formatarDataHora(sessao.abertoEm)}</p></Cartao>
+        <Cartao><p className="text-sm text-stone-600">Aberto em</p><p className="mt-1 text-lg font-semibold">{formatarDataHora(sessao.abertoEm)}</p><p className="text-xs text-stone-500">por {sessao.usuario.nome}</p></Cartao>
         <Cartao><p className="text-sm text-stone-600">Fundo de troco</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(sessao.fundoTroco)}</p></Cartao>
         <Cartao><p className="text-sm text-stone-600">Vendas</p><p className="mt-1 text-lg font-semibold tabular-nums">{t.quantidadeVendas} · {formatarReais(t.faturamento)}</p></Cartao>
         <Cartao><p className="text-sm text-stone-600">Sangrias / suprimentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatarReais(-t.sangrias)} / {formatarReais(t.suprimentos)}</p></Cartao>
@@ -85,7 +87,7 @@ function CaixaAberto({ sessao, aoFechar }: { sessao: SessaoCaixa; aoFechar: (s: 
         titulo="Movimentos deste caixa"
         className="mb-6 overflow-hidden [&>div:last-child]:p-0"
         acoes={
-          <>
+          podeOperar && <>
             <Botao variante="secundario" onClick={() => abrir('SANGRIA')}><ArrowUpCircle className="size-4" aria-hidden /> Sangria</Botao>
             <Botao variante="secundario" onClick={() => abrir('SUPRIMENTO')}><ArrowDownCircle className="size-4" aria-hidden /> Suprimento</Botao>
             <Botao onClick={() => abrir('FECHAR')}><Lock className="size-4" aria-hidden /> Fechar caixa</Botao>

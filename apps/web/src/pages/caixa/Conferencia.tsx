@@ -34,7 +34,7 @@ export function Conferencia({ sessao }: { sessao: SessaoCaixa }) {
       </table>
       <p className="mt-2 text-xs text-stone-500">
         Dinheiro do sistema = fundo de troco ({formatarReais(sessao.fundoTroco)}) + vendas em dinheiro − troco − sangrias + suprimentos.
-        {sessao.totais.boletos > 0 && <> Vendas no boleto ({formatarReais(sessao.totais.boletos)}) não entram no caixa.</>}
+        {!!sessao.totais?.boletos && <> Vendas no boleto ({formatarReais(sessao.totais.boletos)}) não entram no caixa.</>}
       </p>
       {sessao.observacao && <p className="mt-2 text-sm">Observação: {sessao.observacao}</p>}
     </div>

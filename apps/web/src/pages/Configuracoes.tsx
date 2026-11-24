@@ -41,12 +41,10 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const desconto = lerDecimal(f.desconto, 2);
-    const cancelamento = lerDecimal(f.cancelamento, 2);
     const inatividade = Number.parseInt(f.inatividade, 10);
     const taxa = lerDecimal(f.taxa || '0', 2);
     if (taxa === null || taxa > 3000) return setMsg({ tipo: 'erro', texto: 'Taxa de serviço inválida: use um número entre 0 e 30.' });
     if (desconto === null || desconto > 10000) return setMsg({ tipo: 'erro', texto: 'Desconto inválido: use um número entre 0 e 100.' });
-    if (cancelamento === null) return setMsg({ tipo: 'erro', texto: 'Valor de cancelamento inválido. Ex.: 150,00' });
 
     setEnviando(true);
     try {
@@ -55,7 +53,6 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
         body: {
           nomeLoja: f.nomeLoja,
           descontoMaxSemAutorizacao: desconto,
-          cancelamentoMaxSemAutorizacao: cancelamento,
           sessaoInatividadeMin: inatividade,
           validadeOrcamentoDias: Number.parseInt(f.validade, 10),
           taxaServicoPct: taxa,
@@ -81,7 +78,8 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
 
         <Cartao titulo="Autorização do gerente">
           <p className="mb-4 text-sm text-stone-600">
-            Abaixo destes limites o vendedor faz sozinho. Acima, o sistema pede o login e a senha de um gerente.
+            Desconto até este limite o vendedor dá sozinho; acima, o sistema pede o login e a senha do gerente.
+            Cancelar venda e qualquer operação de caixa (abrir, sangria, suprimento, fechar) são sempre do gerente.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo
@@ -91,14 +89,6 @@ function Formulario({ inicial }: { inicial: Configuracao }) {
               required
               defaultValue={decimalParaTexto(inicial.descontoMaxSemAutorizacao, 2)}
               ajuda="Percentual sobre o valor da venda. Ex.: 5,00"
-            />
-            <Campo
-              rotulo="Cancelamento sem autorização até (R$)"
-              name="cancelamento"
-              inputMode="decimal"
-              required
-              defaultValue={decimalParaTexto(inicial.cancelamentoMaxSemAutorizacao, 2)}
-              ajuda="Vendas acima deste valor só o gerente cancela. Ex.: 100,00"
             />
           </div>
         </Cartao>

@@ -23,8 +23,7 @@ beforeAll(async () => {
   p2 = (await post('/api/produtos', { descricao: 'Produto B', unidadeId: un.UN, custo: 3000, precoVenda: 4000 })).body.id;
   p3 = (await post('/api/produtos', { descricao: 'Produto C', unidadeId: un.UN, custo: 100, precoVenda: 200 })).body.id;
   await post('/api/estoque/inventario', { itens: [p1, p2, p3].map((produtoId) => ({ produtoId, contado: 1_000_000 })) }).expect(201);
-  await post('/api/caixa/abrir', { fundoTroco: 0 }).expect(201);
-  await post('/api/caixa/abrir', { fundoTroco: 0 }, vendedor).expect(201);
+  await post('/api/caixa/abrir', { fundoTroco: 0 }).expect(201); // caixa único: o admin abre, todos vendem nele
 
   // Venda 1 (admin): 10 A = R$ 200, dinheiro
   await vender([{ produtoId: p1, quantidade: 10000 }], { pagamentos: [{ forma: 'DINHEIRO', valor: 20000 }] }).expect(201);
@@ -97,11 +96,13 @@ describe('Curva ABC de produtos', () => {
 
 describe('Relatório de caixas', () => {
   it('lista os caixas do período com as diferenças', async () => {
-    await post('/api/caixa/fechar', { informado: { DINHEIRO: 19000, PIX: 0, DEBITO: 0, CREDITO: 0 } }).expect(201);
+    await post('/api/caixa/fechar', { informado: { DINHEIRO: 19000, PIX: 0, DEBITO: 8000, CREDITO: 0 } }).expect(201);
     const r = (await get(`/api/relatorios/caixas?de=${hoje}&ate=${hoje}`)).body;
-    expect(r.sessoes).toHaveLength(2);
-    expect(r.abertos).toBe(1);
+    expect(r.sessoes).toHaveLength(1);
+    expect(r.abertos).toBe(0);
     expect(r.porForma.DINHEIRO).toMatchObject({ esperado: 20000, informado: 19000, diferenca: -1000 });
+    expect(r.porForma.DEBITO).toMatchObject({ esperado: 8000, diferenca: 0 });
+    await post('/api/caixa/abrir', { fundoTroco: 0 }).expect(201); // reabre para os próximos testes
   });
 });
 
