@@ -1,0 +1,78 @@
+// Banco local SQLite.
+// Convenções: dinheiro em CENTAVOS (Int) e quantidades em MILÉSIMOS (Int),
+// para evitar erros de arredondamento. Percentuais em pontos-base (1% = 100).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Perfil {
+  VENDEDOR
+  FINANCEIRO
+  GERENTE
+  ADMIN
+}
+
+model Usuario {
+  id                Int       @id @default(autoincrement())
+  nome              String
+  login             String    @unique
+  senhaHash         String
+  perfil            Perfil
+  ativo             Boolean   @default(true)
+  trocarSenha       Boolean   @default(false)
+  tentativasFalhas  Int       @default(0)
+  bloqueadoAte      DateTime?
+  criadoEm          DateTime  @default(now())
+  atualizadoEm      DateTime  @updatedAt
+
+  sessoes   Sessao[]
+  auditoria Auditoria[]
+}
+
+model Sessao {
+  // Guardamos apenas o hash SHA-256 do token; o token em si só existe no cookie.
+  id           String   @id
+  usuarioId    Int
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  criadaEm     DateTime @default(now())
+  ultimoAcesso DateTime @default(now())
+  expiraEm     DateTime
+  ip           String?
+  userAgent    String?
+
+  @@index([usuarioId])
+}
+
+model Configuracao {
+  id                         Int      @id @default(1)
+  nomeLoja                   String   @default("Minha Loja")
+  // Desconto até este percentual (pontos-base) não precisa de autorização do gerente.
+  descontoMaxSemAutorizacao  Int      @default(500)
+  // Cancelamento de venda até este valor (centavos) não precisa de autorização.
+  cancelamentoMaxSemAutorizacao Int   @default(10000)
+  // Logout automático após X minutos sem uso.
+  sessaoInatividadeMin       Int      @default(30)
+  atualizadoEm               DateTime @updatedAt
+}
+
+model Auditoria {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int?
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  acao       String
+  entidade   String?
+  entidadeId String?
+  detalhes   String?  // JSON
+  ip         String?
+  criadoEm   DateTime @default(now())
+
+  @@index([criadoEm])
+  @@index([usuarioId])
+}

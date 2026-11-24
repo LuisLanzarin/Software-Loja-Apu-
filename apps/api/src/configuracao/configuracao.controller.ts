@@ -1,0 +1,49 @@
+import { Body, Controller, Get, Put, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { z } from 'zod';
+import { AuditoriaService } from '../auditoria/auditoria.service.ts';
+import { RequerPermissao, UsuarioAtual } from '../auth/decorators.ts';
+import type { UsuarioSessao } from '../auth/sessao.service.ts';
+import { ZodPipe } from '../common/zod.pipe.ts';
+import { ConfiguracaoService } from './configuracao.service.ts';
+
+const schema = z.object({
+  nomeLoja: z.string().trim().min(1, 'Informe o nome da loja').max(80),
+  /** Pontos-base: 500 = 5,00% */
+  descontoMaxSemAutorizacao: z.number().int().min(0).max(10000, 'O desconto máximo é 100%'),
+  /** Centavos: 10000 = R$ 100,00 */
+  cancelamentoMaxSemAutorizacao: z.number().int().min(0).max(100_000_000),
+  sessaoInatividadeMin: z.number().int().min(5, 'Mínimo de 5 minutos').max(720, 'Máximo de 12 horas'),
+});
+
+@Controller('configuracao')
+export class ConfiguracaoController {
+  constructor(
+    private readonly config: ConfiguracaoService,
+    private readonly auditoria: AuditoriaService,
+  ) {}
+
+  @Get()
+  obter() {
+    return this.config.obter();
+  }
+
+  @Put()
+  @RequerPermissao('configuracao.editar')
+  async atualizar(
+    @Body(new ZodPipe(schema)) body: z.infer<typeof schema>,
+    @UsuarioAtual() u: UsuarioSessao,
+    @Req() req: Request,
+  ) {
+    const antes = await this.config.obter();
+    const depois = await this.config.atualizar(body);
+    await this.auditoria.registrar('configuracao.alterada', {
+      usuarioId: u.id,
+      entidade: 'Configuracao',
+      entidadeId: 1,
+      detalhes: { antes, depois: body },
+      ip: req.ip,
+    });
+    return depois;
+  }
+}
